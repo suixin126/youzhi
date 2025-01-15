@@ -1,0 +1,30 @@
+{
+  "id": "4809704",
+  "name": "悠智",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "564948",
+      "name": "weixin",
+      "font_class": "weixin",
+      "unicode": "e65d",
+      "unicode_decimal": 58973
+    },
+    {
+      "icon_id": "4936984",
+      "name": "QQ",
+      "font_class": "QQ",
+      "unicode": "e882",
+      "unicode_decimal": 59522
+    },
+    {
+      "icon_id": "4936987",
+      "name": "weibo",
+      "font_class": "weibo",
+      "unicode": "e883",
+      "unicode_decimal": 59523
+    }
+  ]
+}
