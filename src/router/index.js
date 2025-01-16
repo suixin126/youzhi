@@ -82,4 +82,18 @@ const router = createRouter({
   routes,
 })
 
+// 前置守卫
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token');
+  if (to.path === '/login' || to.path === '/register') {
+    next();
+  } else {
+    if (token) {
+      next();
+    } else {
+      next('/login');
+    }
+  }
+})
+
 export default router;

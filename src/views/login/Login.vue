@@ -3,7 +3,8 @@
   <div class="min-h-screen flex">
     <!-- 左侧品牌区域 -->
     <div
-      class="w-1/2 relative bg-gradient-to-br from-indigo-500 to-purple-600 p-12 flex flex-col justify-between text-white">
+      class="w-1/2 relative bg-gradient-to-br from-indigo-500 to-purple-600 p-12 flex flex-col justify-between text-white"
+    >
       <div class="text-2xl font-bold">悠智</div>
 
       <div class="z-10 relative">
@@ -15,7 +16,11 @@
       </div>
 
       <div class="absolute inset-0 opacity-10">
-        <img :src="heroImage" alt="Office Scene" class="w-full h-full object-cover" />
+        <img
+          :src="heroImage"
+          alt="Office Scene"
+          class="w-full h-full object-cover"
+        />
       </div>
 
       <div class="text-sm opacity-70">© 2024 悠智 保留所有权利</div>
@@ -29,7 +34,11 @@
 
         <form @submit.prevent="handleLogin" class="space-y-6">
           <div class="relative">
-            <el-input v-model="form.username" placeholder="邮箱/手机号" class="w-full !rounded-button">
+            <el-input
+              v-model="form.username"
+              placeholder="邮箱/手机号"
+              class="w-full !rounded-button"
+            >
               <template #prefix>
                 <el-icon>
                   <User />
@@ -39,15 +48,22 @@
           </div>
 
           <div class="relative">
-            <el-input v-model="form.password" :type="showPassword ? 'text' : 'password'" placeholder="密码"
-              class="w-full !rounded-button">
+            <el-input
+              v-model="form.password"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="密码"
+              class="w-full !rounded-button"
+            >
               <template #prefix>
                 <el-icon>
                   <Lock />
                 </el-icon>
               </template>
               <template #suffix>
-                <el-icon class="cursor-pointer" @click="showPassword = !showPassword">
+                <el-icon
+                  class="cursor-pointer"
+                  @click="showPassword = !showPassword"
+                >
                   <component :is="showPassword ? 'View' : 'Hide'" />
                 </el-icon>
               </template>
@@ -56,10 +72,16 @@
 
           <div class="flex items-center justify-between">
             <el-checkbox v-model="form.remember">记住密码</el-checkbox>
-            <a href="#" class="text-indigo-600 hover:text-indigo-800">忘记密码？</a>
+            <a href="#" class="text-indigo-600 hover:text-indigo-800"
+              >忘记密码？</a
+            >
           </div>
 
-          <el-button type="primary" class="w-full !rounded-button" @click="handleLogin">
+          <el-button
+            type="primary"
+            class="w-full !rounded-button"
+            @click="handleLogin"
+          >
             登录
           </el-button>
 
@@ -79,7 +101,11 @@
 
           <div class="text-center">
             <span class="text-gray-600">还没有账号？</span>
-            <a href="#/register" class="text-indigo-600 hover:text-indigo-800 ml-1">立即注册</a>
+            <a
+              href="#/register"
+              class="text-indigo-600 hover:text-indigo-800 ml-1"
+              >立即注册</a
+            >
           </div>
         </form>
       </div>
@@ -90,6 +116,10 @@
 <script setup>
 import { ref, reactive } from "vue";
 import { User, Lock, View, Hide } from "@element-plus/icons-vue";
+import { login } from "@/api/api.js";
+import { ElMessage } from "element-plus";
+import { useRouter } from "vue-router";
+const router = useRouter();
 
 const showPassword = ref(false);
 
@@ -102,8 +132,31 @@ const form = reactive({
 const heroImage =
   "https://ai-public.mastergo.com/ai/img_res/97e40bc1810d1014704b2b4144f7c143.jpg";
 
+// 登录
 const handleLogin = () => {
-  console.log("Login attempt", form);
+  if (!form.username || !form.password) {
+    ElMessage.error("请输入用户名和密码");
+    return;
+  }
+  login(
+    {
+      name: form.username,
+      password: form.password,
+    },
+    {
+      "Content-Type": "application/json",
+    }
+  ).then((res) => {
+    console.log(res);
+    if (res.data.status === 200) {
+      ElMessage.success("登录成功");
+      // 设置token
+      localStorage.setItem("token", res.data.data.token);
+      router.push("/");
+    }else{
+      ElMessage.error(res.data.message);
+    }
+  });
 };
 </script>
 

@@ -124,7 +124,8 @@ import {
   Message,
   Iphone,
 } from "@element-plus/icons-vue";
-import { register } from "@/api/test.js";
+import { register } from "@/api/api.js";
+import { ElMessage } from "element-plus";
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 const form = reactive({
@@ -138,6 +139,12 @@ const form = reactive({
 const heroImage =
   "https://ai-public.mastergo.com/ai/img_res/97e40bc1810d1014704b2b4144f7c143.jpg";
 const handleRegister = () => {
+  // 检测表单是否填写完整
+  if (!form.email || !form.phone || !form.username || !form.password || !form.confirmPassword) {
+    ElMessage.error("请填写完整的表单");
+    return;
+  }
+  // 检测密码是否一致
   if (form.password !== form.confirmPassword) {
     ElMessage.error("密码不一致");
     return;
