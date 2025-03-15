@@ -4,7 +4,6 @@
     <div class="mb-8 flex items-center justify-between">
       <div class="relative flex-1 max-w-2xl mx-auto">
         <el-input
-          v-model="searchText"
           placeholder="搜索任务或日程..."
           class="!rounded-full"
         >

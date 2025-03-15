@@ -1,214 +1,270 @@
 <!-- 代码已包含 CSS：使用 TailwindCSS , 安装 TailwindCSS 后方可看到布局样式效果 -->
+
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- 主内容区 -->
-    <div class="max-w-8xl mx-auto px-3 pt-4 pb-8">
-      <!-- 概览数据 -->
-      <div class="mb-8 grid grid-cols-3 gap-6">
-        <div class="rounded-lg bg-white p-6 shadow-sm">
-          <div class="mb-2 text-gray-600">今日待办</div>
-          <div class="flex items-end justify-between">
-            <div class="text-3xl font-semibold">8</div>
-            <div class="text-sm text-gray-500">已完成 5 项任务</div>
+  <div class="min-h-screen bg-gray-50 p-6">
+    <div class="mx-auto max-w-7xl">
+      <!-- 顶部数据概览 -->
+      <div class="grid grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg p-6 shadow-sm">
+          <div class="text-gray-600 mb-2">今日待办</div>
+          <div class="flex items-end">
+            <span class="text-4xl font-medium">8</span>
+            <span class="text-gray-500 ml-3">已完成 5 项任务</span>
           </div>
         </div>
-        <div class="rounded-lg bg-white p-6 shadow-sm">
-          <div class="mb-2 text-gray-600">学习时长</div>
-          <div class="flex items-end justify-between">
-            <div class="text-3xl font-semibold">6.5h</div>
-            <div class="flex items-center text-sm text-green-500">
-              <el-icon><ArrowUp /></el-icon>
-              较昨日增加 1.2h
-            </div>
+        <div class="bg-white rounded-lg p-6 shadow-sm">
+          <div class="text-gray-600 mb-2">学习时长</div>
+          <div class="flex items-end">
+            <span class="text-4xl font-medium">6.5h</span>
+            <span class="text-green-500 ml-3">较昨日增加 1.2h</span>
           </div>
         </div>
-        <div class="rounded-lg bg-white p-6 shadow-sm">
-          <div class="mb-2 text-gray-600">健康指数</div>
-          <div class="flex items-end justify-between">
-            <div class="text-3xl font-semibold">85</div>
-            <div class="flex items-center text-sm text-green-500">
-              <el-icon><Heart /></el-icon>
-              状态良好
-            </div>
+        <div class="bg-white rounded-lg p-6 shadow-sm">
+          <div class="text-gray-600 mb-2">健康指数</div>
+          <div class="flex items-end">
+            <span class="text-4xl font-medium">85</span>
+            <span class="text-green-500 ml-3">状态良好</span>
           </div>
         </div>
       </div>
 
-      <!-- 任务列表 -->
-      <div class="mb-8 grid grid-cols-3 gap-6">
-        <div class="col-span-2 rounded-lg bg-white p-6 shadow-sm">
-          <h2 class="mb-4 text-lg font-medium">任务列表</h2>
-          <el-table :data="tasks" style="width: 100%">
-            <el-table-column width="50">
-              <template #default="scope">
-                <el-checkbox v-model="scope.row.completed" />
-              </template>
-            </el-table-column>
-            <el-table-column prop="name" label="任务名称" />
-            <el-table-column prop="deadline" label="截止时间" width="120" />
-            <el-table-column width="100">
-              <template #default="scope">
-                <el-tag
-                  :type="
-                    scope.row.priority === '高'
-                      ? 'danger'
-                      : scope.row.priority === '中'
-                      ? 'warning'
-                      : 'info'
-                  "
-                  size="small"
-                >
-                  {{ scope.row.priority }}
-                </el-tag>
-              </template>
-            </el-table-column>
-          </el-table>
+      <div class="flex gap-8">
+        <!-- 左侧任务列表 -->
+        <div class="flex-1">
+          <div class="bg-white rounded-lg p-6 shadow-sm">
+            <h2 class="text-xl font-medium mb-6">任务列表</h2>
+            <el-table :data="taskList" style="width: 100%">
+              <el-table-column type="selection" width="55" />
+              <el-table-column prop="name" label="任务名称" />
+              <el-table-column prop="deadline" label="截止时间" width="180" />
+              <el-table-column prop="priority" label="优先级" width="100">
+                <template #default="{ row }">
+                  <el-tag :type="getPriorityType(row.priority)" size="small">
+                    {{ row.priority }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+
+          <!-- 底部任务统计 -->
+          <div class="grid grid-cols-4 gap-6 mt-8">
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+              <div class="text-red-500 mb-2">紧急任务</div>
+              <div class="text-3xl font-medium">3</div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+              <div class="text-green-500 mb-2">已完成</div>
+              <div class="text-3xl font-medium">12</div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+              <div class="text-blue-500 mb-2">进行中</div>
+              <div class="text-3xl font-medium">5</div>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-sm">
+              <div class="text-orange-500 mb-2">待开始</div>
+              <div class="text-3xl font-medium">8</div>
+            </div>
+          </div>
         </div>
 
-        <!-- 新建任务 -->
-        <div class="rounded-lg bg-white p-6 shadow-sm">
-          <h2 class="mb-4 text-lg font-medium">新建任务</h2>
-          <el-form>
-            <el-form-item>
+        <!-- 右侧新建任务 -->
+        <div class="w-96">
+          <div class="bg-white rounded-lg p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-medium">新建任务</h2>
+              <el-button type="primary" class="flex items-center !rounded-button" @click="startVoiceInput">
+                <el-icon class="mr-1"><Microphone /></el-icon>
+                语音输入
+              </el-button>
+            </div>
+
+            <div class="space-y-4">
+              <div>
+                <el-radio-group v-model="taskType" class="mb-4">
+                  <el-radio-button label="small">小任务</el-radio-button>
+                  <el-radio-button label="big">大任务</el-radio-button>
+                </el-radio-group>
+              </div>
+
               <el-input v-model="newTask.name" placeholder="输入任务名称" />
-            </el-form-item>
-            <el-form-item>
+
               <el-date-picker
                 v-model="newTask.deadline"
                 type="datetime"
                 placeholder="选择截止时间"
                 style="width: 100%"
               />
-            </el-form-item>
-            <el-form-item>
-              <el-select
-                v-model="newTask.priority"
-                placeholder="选择优先级"
-                style="width: 100%"
-              >
+
+              <el-select v-model="newTask.priority" placeholder="选择优先级" style="width: 100%">
                 <el-option label="低" value="低" />
                 <el-option label="中" value="中" />
                 <el-option label="高" value="高" />
               </el-select>
-            </el-form-item>
-            <el-button
-              type="primary"
-              class="w-full !rounded-button"
-              @click="createTask"
-              >创建任务</el-button
-            >
-          </el-form>
 
-          <!-- 任务标签 -->
-          <div class="mt-6">
-            <h3 class="mb-3 text-sm font-medium text-gray-600">任务标签</h3>
-            <div class="flex flex-wrap gap-2">
-              <el-tag type="danger">紧急</el-tag>
-              <el-tag type="primary">学习</el-tag>
-              <el-tag type="success">作业</el-tag>
-              <el-tag type="warning">考试</el-tag>
-              <el-tag>课程</el-tag>
+              <template v-if="taskType === 'big'">
+                <div class="border rounded p-4">
+                  <div class="flex items-center justify-between mb-4">
+                    <span class="font-medium">子任务列表</span>
+                    <el-button type="primary" size="small" class="!rounded-button" @click="addSubTask">
+                      添加子任务
+                    </el-button>
+                  </div>
+                  <div v-for="(subTask, index) in newTask.subTasks" :key="index" class="flex items-center gap-2 mb-2">
+                    <el-input v-model="subTask.name" placeholder="子任务名称" />
+                    <el-button type="danger" size="small" class="!rounded-button" @click="removeSubTask(index)">
+                      删除
+                    </el-button>
+                  </div>
+                </div>
+              </template>
+
+              <div>
+                <div class="mb-2">任务标签</div>
+                <div class="flex flex-wrap gap-2">
+                  <el-tag 
+                    v-for="tag in tags" 
+                    :key="tag"
+                    :type="getTagType(tag)"
+                    class="cursor-pointer"
+                    @click="toggleTag(tag)"
+                  >
+                    {{ tag }}
+                  </el-tag>
+                </div>
+              </div>
+
+              <el-button type="primary" class="w-full !rounded-button" @click="createTask">
+                创建任务
+              </el-button>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- 任务统计 -->
-      <div class="grid grid-cols-4 gap-6">
-        <div class="rounded-lg bg-red-50 p-6">
-          <div class="text-red-600">紧急任务</div>
-          <div class="mt-2 text-2xl font-semibold text-red-600">3</div>
-        </div>
-        <div class="rounded-lg bg-green-50 p-6">
-          <div class="text-green-600">已完成</div>
-          <div class="mt-2 text-2xl font-semibold text-green-600">12</div>
-        </div>
-        <div class="rounded-lg bg-blue-50 p-6">
-          <div class="text-blue-600">进行中</div>
-          <div class="mt-2 text-2xl font-semibold text-blue-600">5</div>
-        </div>
-        <div class="rounded-lg bg-orange-50 p-6">
-          <div class="text-orange-600">待开始</div>
-          <div class="mt-2 text-2xl font-semibold text-orange-600">8</div>
         </div>
       </div>
     </div>
   </div>
 </template>
-  
-  <script lang="ts" setup>
-import { ref } from "vue";
-import {
-  Monitor,
-  House,
-  List,
-  DataLine,
-  TrendCharts,
-  Setting,
-  Search,
-  Microphone,
-  Bell,
-  ArrowUp,
-//   Heart,
-} from "@element-plus/icons-vue";
 
-const searchText = ref("");
+<script lang="ts" setup>
+import { ref } from 'vue';
+import { ElMessage } from 'element-plus';
+import { Microphone } from '@element-plus/icons-vue';
 
-const tasks = ref([
-  {
-    name: "完成数学分析第三章习题",
-    deadline: "2024-01-20 23:59",
-    priority: "高",
-    completed: false,
-  },
-  {
-    name: "准备英语演讲",
-    deadline: "2024-01-21 14:00",
-    priority: "中",
-    completed: false,
-  },
-  {
-    name: "物理实验报告",
-    deadline: "2024-01-22 18:00",
-    priority: "低",
-    completed: false,
-  },
-]);
+interface SubTask {
+  name: string;
+}
 
-const newTask = ref({
-  name: "",
-  deadline: "",
-  priority: "低",
+interface Task {
+  name: string;
+  deadline: string;
+  priority: string;
+  subTasks: SubTask[];
+  tags: string[];
+}
+
+const taskType = ref('small');
+const newTask = ref<Task>({
+  name: '',
+  deadline: '',
+  priority: '',
+  subTasks: [],
+  tags: []
 });
 
-const createTask = () => {
-  if (newTask.value.name && newTask.value.deadline) {
-    tasks.value.push({
-      name: newTask.value.name,
-      deadline: newTask.value.deadline,
-      priority: newTask.value.priority,
-      completed: false,
-    });
-    newTask.value = {
-      name: "",
-      deadline: "",
-      priority: "低",
-    };
+const taskList = ref([
+  { name: '完成数学分析第二章习题', deadline: '2024-01-20 23:59', priority: '高' },
+  { name: '准备英语演讲', deadline: '2024-01-21 14:00', priority: '中' },
+  { name: '物理实验报告', deadline: '2024-01-22 18:00', priority: '低' }
+]);
+
+const tags = ['紧急', '学习', '作业', '考试', '课程'];
+const selectedTags = ref<string[]>([]);
+
+const getPriorityType = (priority: string) => {
+  const types: Record<string, string> = {
+    '高': 'danger',
+    '中': 'warning',
+    '低': 'info'
+  };
+  return types[priority] || 'info';
+};
+
+const getTagType = (tag: string) => {
+  const types: Record<string, string> = {
+    '紧急': 'danger',
+    '学习': 'primary',
+    '作业': 'success',
+    '考试': 'warning',
+    '课程': 'info'
+  };
+  return types[tag] || 'default';
+};
+
+const toggleTag = (tag: string) => {
+  const index = selectedTags.value.indexOf(tag);
+  if (index === -1) {
+    selectedTags.value.push(tag);
+  } else {
+    selectedTags.value.splice(index, 1);
   }
 };
-</script>
+
+const addSubTask = () => {
+  newTask.value.subTasks.push({ name: '' });
+};
+
+const removeSubTask = (index: number) => {
+  newTask.value.subTasks.splice(index, 1);
+};
+
+const startVoiceInput = () => {
+  ElMessage.success('开始语音输入');
+  // 实际项目中这里需要调用语音识别API
+};
+
+const createTask = () => {
+  if (!newTask.value.name) {
+    ElMessage.warning('请输入任务名称');
+    return;
+  }
+  if (!newTask.value.deadline) {
+    ElMessage.warning('请选择截止时间');
+    return;
+  }
+  if (!newTask.value.priority) {
+    ElMessage.warning('请选择优先级');
+    return;
+  }
+
+  taskList.value.push({
+    name: newTask.value.name,
+    deadline: newTask.value.deadline,
+    priority: newTask.value.priority
+  });
+
+  // 重置表单
+  newTask.value = {
+    name: '',
+    deadline: '',
+    priority: '',
+    subTasks: [],
+    tags: []
+  };
+  selectedTags.value = [];
   
+  ElMessage.success('创建任务成功');
+};
+</script>
+
 <style scoped>
-.el-input__wrapper {
-  box-shadow: none !important;
-  border: 1px solid #e5e7eb;
+.el-input :deep(.el-input__wrapper) {
+  box-shadow: 0 0 0 1px #e5e7eb;
 }
-.el-input__wrapper:hover {
-  border-color: #3b82f6;
+.el-input :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px #409eff;
 }
-.el-input__wrapper.is-focus {
-  border-color: #3b82f6;
+.el-date-picker {
+  --el-datepicker-border-color: #e5e7eb;
 }
 </style>
-  
-  
+
