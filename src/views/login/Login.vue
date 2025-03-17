@@ -115,7 +115,6 @@
 
 <script setup>
 import { ref, reactive } from "vue";
-import { User, Lock, View, Hide } from "@element-plus/icons-vue";
 import { login } from "@/api/api.js";
 import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";

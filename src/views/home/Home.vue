@@ -2,7 +2,6 @@
 
 <template>
   <div class="min-h-screen bg-gray-50">
-
     <!-- 主要内容区域 -->
     <div class="pt-4 pb-8 max-w-8xl mx-auto px-4">
       <!-- 状态卡片 -->
@@ -10,11 +9,13 @@
         <div class="bg-white rounded-lg p-6 shadow-sm">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-medium">今日待办</h3>
-            <span class="text-3xl font-semibold text-blue-500">8</span>
+            <span class="text-3xl font-semibold text-blue-500">{{
+              totalNum
+            }}</span>
           </div>
           <div class="flex items-center text-gray-600">
             <el-icon class="mr-2"><Check /></el-icon>
-            <span>已完成 5 项任务</span>
+            <span>已完成 {{ finishedTaskNum }} 项任务</span>
           </div>
         </div>
 
@@ -32,11 +33,13 @@
         <div class="bg-white rounded-lg p-6 shadow-sm">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-medium">健康指数</h3>
-            <span class="text-3xl font-semibold text-orange-500">85</span>
+            <span class="text-3xl font-semibold text-orange-500">{{
+              healthy.point
+            }}</span>
           </div>
           <div class="flex items-center text-gray-600">
             <el-icon class="mr-2"><Star /></el-icon>
-            <span>状态良好</span>
+            <span> {{ healthyState }} </span>
           </div>
         </div>
       </div>
@@ -47,79 +50,102 @@
           <!-- 今日日程 -->
           <div class="bg-white rounded-lg p-6 shadow-sm">
             <h3 class="text-lg font-medium mb-6">今日日程</h3>
+            <div class="flex space-x-4 mb-6">
+              <el-button
+                :class="{
+                  '!bg-blue-500 text-white': filterStatus === 'all',
+                  '!bg-gray-200 text-gray-600': filterStatus !== 'all',
+                }"
+                @click="filterStatus = 'all'"
+                class="!rounded-button"
+              >
+                全部
+              </el-button>
+              <el-button
+                :class="{
+                  '!bg-blue-500 text-white': filterStatus === 'completed',
+                  '!bg-gray-200 text-gray-600': filterStatus !== 'completed',
+                }"
+                @click="filterStatus = 'completed'"
+                class="!rounded-button"
+              >
+                已完成
+              </el-button>
+              <el-button
+                :class="{
+                  '!bg-blue-500 text-white': filterStatus === 'pending',
+                  '!bg-gray-200 text-gray-600': filterStatus !== 'pending',
+                }"
+                @click="filterStatus = 'pending'"
+                class="!rounded-button"
+              >
+                未完成
+              </el-button>
+            </div>
             <div class="space-y-4">
-              <div class="flex items-start p-4 bg-blue-50 rounded-lg">
+              <div
+                class="flex items-start p-4 bg-blue-50 rounded-lg"
+                v-for="(item, index) in currentTasks"
+                :key="index"
+              >
                 <div class="w-20">
-                  <div class="text-lg font-medium">09:00</div>
-                  <div class="text-sm text-gray-500">2小时</div>
-                </div>
-                <div class="flex-1 ml-4">
-                  <div class="font-medium">高等数学课程</div>
-                  <div class="text-sm text-gray-500">理工楼 B304</div>
-                </div>
-                <div>
-                  <el-button type="primary" class="!rounded-button"
-                    >进行中</el-button
+                  <div
+                    style="text-align: center; line-height: 50px"
+                    class="text-lg font-medium"
                   >
-                </div>
-              </div>
-
-              <div class="flex items-start p-4 hover:bg-gray-50 rounded-lg">
-                <div class="w-20">
-                  <div class="text-lg font-medium">11:30</div>
-                  <div class="text-sm text-gray-500">1小时</div>
+                    {{ item.timeStart.split(" ")[1] }}
+                  </div>
                 </div>
                 <div class="flex-1 ml-4">
-                  <div class="font-medium">小组项目讨论</div>
-                  <div class="text-sm text-gray-500">图书馆讨论室3</div>
+                  <div
+                    style="text-align: center; line-height: 50px"
+                    class="font-medium"
+                  >
+                    {{ item.name }}
+                  </div>
                 </div>
-                <div>
-                  <el-button class="!rounded-button">未开始</el-button>
-                </div>
-              </div>
-
-              <div class="flex items-start p-4 hover:bg-gray-50 rounded-lg">
-                <div class="w-20">
-                  <div class="text-lg font-medium">14:00</div>
-                  <div class="text-sm text-gray-500">3小时</div>
-                </div>
-                <div class="flex-1 ml-4">
-                  <div class="font-medium">算法练习</div>
-                  <div class="text-sm text-gray-500">自习</div>
-                </div>
-                <div>
-                  <el-button class="!rounded-button">未开始</el-button>
+                <div style="text-align: center; line-height: 50px">
+                  <el-button
+                    :type="item.state ? 'primary' : ''"
+                    class="!rounded-button"
+                    >{{ item.state === 0 ? "未完成" : "已完成" }}</el-button
+                  >
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 学习数据分析 -->
+          <!-- 日历显示 -->
           <div class="bg-white rounded-lg p-6 shadow-sm">
             <div class="flex justify-between items-center mb-6">
-              <h3 class="text-lg font-medium">学习数据分析</h3>
-              <div class="flex space-x-2">
-                <el-button
-                  :class="{ '!bg-blue-50': activeChart === 'week' }"
-                  @click="activeChart = 'week'"
-                  class="!rounded-button"
-                  >周</el-button
-                >
-                <el-button
-                  :class="{ '!bg-blue-50': activeChart === 'month' }"
-                  @click="activeChart = 'month'"
-                  class="!rounded-button"
-                  >月</el-button
-                >
-                <el-button
-                  :class="{ '!bg-blue-50': activeChart === 'year' }"
-                  @click="activeChart = 'year'"
-                  class="!rounded-button"
-                  >年</el-button
-                >
-              </div>
+              <h3 class="text-lg font-medium">日历</h3>
             </div>
-            <div ref="chartRef" class="h-64"></div>
+            <el-calendar
+              ref="calendar"
+              v-model="value"
+              @input="handleCellClick"
+            >
+              <template #header>
+                <span>{{ formatDate(value) }}</span>
+                <el-button-group>
+                  <el-button size="small" @click="selectDate('prev-year')">
+                    上一年
+                  </el-button>
+                  <el-button size="small" @click="selectDate('prev-month')">
+                    上个月
+                  </el-button>
+                  <el-button size="small" @click="selectDate('today')"
+                    >今天</el-button
+                  >
+                  <el-button size="small" @click="selectDate('next-month')">
+                    下个月
+                  </el-button>
+                  <el-button size="small" @click="selectDate('next-year')">
+                    下一年
+                  </el-button>
+                </el-button-group>
+              </template>
+            </el-calendar>
           </div>
         </div>
 
@@ -132,48 +158,61 @@
               <div>
                 <div class="flex justify-between mb-2">
                   <span class="text-gray-600">今日步数</span>
-                  <span class="font-medium">6,832 步</span>
+                  <span class="font-medium">{{ healthy.footNum }} 步</span>
                 </div>
-                <el-progress :percentage="68" color="#10B981" />
+                <!-- 总2万步 -->
+                <el-progress
+                  :percentage="parseFloat((healthy.footNum / 200).toFixed(1))"
+                  color="#10B981"
+                />
               </div>
               <div>
                 <div class="flex justify-between mb-2">
                   <span class="text-gray-600">专注时长</span>
-                  <span class="font-medium">4.5 小时</span>
+
+                  <span class="font-medium">{{ healthy.studyTime }} 小时</span>
                 </div>
-                <el-progress :percentage="75" color="#3B82F6" />
+                <!-- 总6小时 -->
+                <el-progress
+                  :percentage="
+                    parseFloat(((healthy.studyTime * 100) / 6).toFixed(1))
+                  "
+                  color="#3B82F6"
+                />
               </div>
               <div>
                 <div class="flex justify-between mb-2">
                   <span class="text-gray-600">睡眠时长</span>
-                  <span class="font-medium">7.2 小时</span>
+                  <span class="font-medium">{{ healthy.sleepTime }} 小时</span>
                 </div>
-                <el-progress :percentage="90" color="#F59E0B" />
+                <!-- 总8h -->
+                <el-progress
+                  :percentage="
+                    parseFloat(((healthy.sleepTime * 100) / 8).toFixed(1))
+                  "
+                  color="#F59E0B"
+                />
               </div>
             </div>
           </div>
 
           <!-- 待办任务 -->
           <div class="bg-white rounded-lg p-6 shadow-sm">
-            <h3 class="text-lg font-medium mb-6">待办任务</h3>
+            <h3 class="text-lg font-medium mb-6">今日待办</h3>
             <div class="space-y-4">
               <div
-                class="flex items-center justify-between p-3 bg-red-50 rounded-lg"
+                v-for="(item, index) in notFinishedTasks"
+                :key="index"
+                :class="
+                  index % 2
+                    ? 'flex items-center justify-between p-3 bg-red-50 rounded-lg'
+                    : 'flex items-center justify-between p-3 bg-orange-50 rounded-lg'
+                "
               >
-                <span class="font-medium">数学作业</span>
-                <span class="text-red-500 text-sm">今天 23:59</span>
-              </div>
-              <div
-                class="flex items-center justify-between p-3 bg-orange-50 rounded-lg"
-              >
-                <span class="font-medium">英语演讲准备</span>
-                <span class="text-orange-500 text-sm">明天 14:00</span>
-              </div>
-              <div
-                class="flex items-center justify-between p-3 bg-blue-50 rounded-lg"
-              >
-                <span class="font-medium">实验报告</span>
-                <span class="text-blue-500 text-sm">后天 18:00</span>
+                <span class="font-medium">{{ item.name }}</span>
+                <span class="text-red-500 text-sm">{{
+                  item.timeStart.split(" ")[1]
+                }}</span>
               </div>
             </div>
           </div>
@@ -182,9 +221,9 @@
     </div>
   </div>
 </template>
-  
-  <script lang="ts" setup>
-import { ref, onMounted } from "vue";
+
+<script lang="ts" setup>
+import { ref, onMounted, reactive, watch } from "vue";
 import {
   Bell,
   Check,
@@ -192,90 +231,50 @@ import {
   Star,
   Microphone,
 } from "@element-plus/icons-vue";
-import * as echarts from "echarts";
+import userStore from "@/store/user.js";
+import { format } from "date-fns";
+import type { CalendarDateType, CalendarInstance } from "element-plus";
+import type { ElCalendar } from "element-plus";
+import { getHealthyState } from "@/utils/healthy.js";
+const store = userStore();
+const { tasks, healthy } = store;
+const totalNum = tasks.length;
+const finishedTaskNum = tasks.filter((task) => task.state === 1).length;
+const healthyState = ref("");
+const filterStatus = ref("all");
+let currentTasks = [...tasks];
+let notFinishedTasks = tasks.filter((task) => task.state === 0);
+const value = ref(new Date());
+// 处理日历单元格点击事件
+const handleCellClick = (date) => {
+  const formDate = formatDate(date);
+  console.log(formDate);
+};
 
-const searchText = ref("");
-const activeChart = ref("week");
-const chartRef = ref<HTMLElement>();
-const avatarUrl =
-  "https://ai-public.mastergo.com/ai/img_res/aa07b5a5ec09b2a702f6add3b996b7f8.jpg";
-
+const calendar = ref<CalendarInstance>();
+const selectDate = (val: CalendarDateType) => {
+  if (!calendar.value) return;
+  calendar.value.selectDate(val);
+};
+// 格式化日期函数
+const formatDate = (date: Date) => {
+  return format(date, "yyyy-MM-dd");
+};
+watch(filterStatus, (newValue) => {
+  if (newValue === "all") {
+    currentTasks = [...tasks];
+  } else if (newValue === "completed") {
+    currentTasks = tasks.filter((task) => task.state === 1);
+  } else {
+    currentTasks = tasks.filter((task) => task.state === 0);
+  }
+});
 onMounted(() => {
-  const chart = echarts.init(chartRef.value as HTMLElement);
-
-  const option = {
-    animation: false,
-    grid: {
-      top: 20,
-      right: 20,
-      bottom: 20,
-      left: 40,
-      containLabel: true,
-    },
-    xAxis: {
-      type: "category",
-      data: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
-      axisLine: {
-        lineStyle: {
-          color: "#E5E7EB",
-        },
-      },
-    },
-    yAxis: {
-      type: "value",
-      min: 0,
-      max: 8,
-      interval: 2,
-      axisLine: {
-        show: false,
-      },
-      splitLine: {
-        lineStyle: {
-          color: "#E5E7EB",
-        },
-      },
-    },
-    series: [
-      {
-        data: [5.8, 6.0, 5.2, 6.5, 6.2, 5.9, 6.8],
-        type: "line",
-        smooth: true,
-        symbolSize: 8,
-        lineStyle: {
-          width: 3,
-          color: "#3B82F6",
-        },
-        itemStyle: {
-          color: "#3B82F6",
-        },
-        areaStyle: {
-          color: {
-            type: "linear",
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              {
-                offset: 0,
-                color: "rgba(59, 130, 246, 0.2)",
-              },
-              {
-                offset: 1,
-                color: "rgba(59, 130, 246, 0)",
-              },
-            ],
-          },
-        },
-      },
-    ],
-  };
-
-  chart.setOption(option);
+  healthyState.value = getHealthyState(healthy.point);
 });
 </script>
-  
-  <style scoped>
+
+<style scoped>
 :deep(.el-input__wrapper) {
   background-color: #f3f4f6;
   border: none;
@@ -303,5 +302,3 @@ onMounted(() => {
   color: #6b7280;
 }
 </style>
-  
-  

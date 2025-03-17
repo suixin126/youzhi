@@ -1,19 +1,19 @@
 <template>
   <div>
     <el-row class="tac">
-      <div class="flex h-16 items-center px-6">
+      <div class="flex h-16 items-center px-6 my" @click="toIndex()">
         <el-icon class="text-blue-500 text-2xl"><Monitor /></el-icon>
         <span class="ml-2 text-xl font-medium text-blue-500">悠智</span>
       </div>
       <el-col>
         <el-menu
-          default-active="/"
+          :default-active="activeIndex"
           class="el-menu-vertical-demo"
           @open="handleOpen"
           @close="handleClose"
           router
         >
-        <el-menu-item index="/">
+          <el-menu-item index="/home">
             <el-icon><House /></el-icon>
             <span>日程管理</span>
           </el-menu-item>
@@ -40,19 +40,24 @@
 </template>
 
 <script setup>
-import {
-  Document,
-  Menu as IconMenu,
-  Location,
-  Setting,
-} from "@element-plus/icons-vue";
+import { computed } from "vue";
+import { useRouter,useRoute } from "vue-router";
+const router = useRouter();
+const route = useRoute();
+const activeIndex = computed(()=>route.path)
 const handleOpen = (key, keyPath) => {
   // console.log(key, keyPath);
 };
 const handleClose = (key, keyPath) => {
   // console.log(key, keyPath);
 };
+const toIndex = () => {
+  router.push("/")
+};
 </script>
 
 <style lang="scss" scoped>
+.my:hover {
+  cursor: pointer;
+}
 </style>
