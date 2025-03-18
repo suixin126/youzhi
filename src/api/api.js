@@ -25,3 +25,19 @@ export const addTask = (params,headers)=>{
 export const addBigTask = (params,headers)=>{
     return http.post("/task/plan",params,headers);
 }
+// 添加大任务
+export const addBigTask1 = (params,headers)=>{
+    return http.post("/task/addPlanedTasks",params,headers);
+}
+// 修改状态
+export const updateStatus = (params,headers)=>{
+    return http.post("/task/update/status",params,headers)
+}
+// 查询某日的任务情况
+export const getRandomTask = (params)=>{
+    return http.get(`/task/getOneDay?date=${params.date}`);
+}
+// 删除任务
+export const deleteTask = (params,headers)=>{
+    return http.post('/task/delete',params,headers);
+}

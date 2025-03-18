@@ -10,12 +10,12 @@
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-medium">今日待办</h3>
             <span class="text-3xl font-semibold text-blue-500">{{
-              totalNum
+              taskList.length
             }}</span>
           </div>
           <div class="flex items-center text-gray-600">
             <el-icon class="mr-2"><Check /></el-icon>
-            <span>已完成 {{ finishedTaskNum }} 项任务</span>
+            <span>已完成 {{ finishedTasks.length }} 项任务</span>
           </div>
         </div>
 
@@ -85,7 +85,7 @@
             <div class="space-y-4">
               <div
                 class="flex items-start p-4 bg-blue-50 rounded-lg"
-                v-for="(item, index) in currentTasks"
+                v-for="(item, index) in currentTaskList"
                 :key="index"
               >
                 <div class="w-20">
@@ -93,7 +93,7 @@
                     style="text-align: center; line-height: 50px"
                     class="text-lg font-medium"
                   >
-                    {{ item.timeStart.split(" ")[1] }}
+                    {{ item.startTime.split("T")[1] }}
                   </div>
                 </div>
                 <div class="flex-1 ml-4">
@@ -101,14 +101,29 @@
                     style="text-align: center; line-height: 50px"
                     class="font-medium"
                   >
-                    {{ item.name }}
+                    {{ item.description }}
                   </div>
                 </div>
                 <div style="text-align: center; line-height: 50px">
                   <el-button
                     :type="item.state ? 'primary' : ''"
                     class="!rounded-button"
-                    >{{ item.state === 0 ? "未完成" : "已完成" }}</el-button
+                    >{{ item.state !== 1 ? "未完成" : "已完成" }}</el-button
+                  >
+                </div>
+                <div
+                  style="
+                    text-align: center;
+                    line-height: 50px;
+                    margin-left: 20px;
+                  "
+                >
+                  <!-- 查看详情按钮 -->
+                  <el-button
+                    type="primary"
+                    class="!rounded-button"
+                    @click="showDetailDialog(item)"
+                    >查看详情</el-button
                   >
                 </div>
               </div>
@@ -201,7 +216,7 @@
             <h3 class="text-lg font-medium mb-6">今日待办</h3>
             <div class="space-y-4">
               <div
-                v-for="(item, index) in notFinishedTasks"
+                v-for="(item, index) in nFinishedTasks"
                 :key="index"
                 :class="
                   index % 2
@@ -209,9 +224,9 @@
                     : 'flex items-center justify-between p-3 bg-orange-50 rounded-lg'
                 "
               >
-                <span class="font-medium">{{ item.name }}</span>
+                <span class="font-medium">{{ item.description }}</span>
                 <span class="text-red-500 text-sm">{{
-                  item.timeStart.split(" ")[1]
+                  item.startTime.split("T")[1]
                 }}</span>
               </div>
             </div>
@@ -219,36 +234,57 @@
         </div>
       </div>
     </div>
+    <div>
+      <template>
+        <TaskDialog
+          v-model:visible="showDialog"
+          v-model:tasks="tasks"
+          @confirm="handleTaskConfirm"
+        />
+      </template>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, reactive, watch } from "vue";
-import {
-  Bell,
-  Check,
-  ArrowUp,
-  Star,
-  Microphone,
-} from "@element-plus/icons-vue";
+import { ref, reactive, watch, onBeforeMount } from "vue";
 import userStore from "@/store/user.js";
 import { format } from "date-fns";
 import type { CalendarDateType, CalendarInstance } from "element-plus";
-import type { ElCalendar } from "element-plus";
 import { getHealthyState } from "@/utils/healthy.js";
+import { getTasksInfo, getRandomTask } from "@/api/api.js";
+import TaskDialog from "./TaskDialog.vue";
+let tasks = reactive([]);
+const showDialog = ref(false);
+const handleTaskConfirm = (updatedTasks) => {
+  // 处理更新后的任务数据
+  console.log("更新后的任务列表:", updatedTasks);
+  showDialog.value = false;
+};
 const store = userStore();
-const { tasks, healthy } = store;
-const totalNum = tasks.length;
-const finishedTaskNum = tasks.filter((task) => task.state === 1).length;
+const { healthy } = store;
 const healthyState = ref("");
 const filterStatus = ref("all");
-let currentTasks = [...tasks];
-let notFinishedTasks = tasks.filter((task) => task.state === 0);
+const taskList = reactive([]);
+let currentTaskList = reactive([]);
+let finishedTasks = reactive([]);
+let nFinishedTasks = reactive([]);
 const value = ref(new Date());
+const detailVisible = ref(true);
+const showDetailDialog = (task) => {
+  detailVisible.value = true;
+};
 // 处理日历单元格点击事件
 const handleCellClick = (date) => {
-  const formDate = formatDate(date);
-  console.log(formDate);
+  const formatTime = formatDate(date);
+  getRandomTask({
+    date: formatTime,
+  }).then((res) => {
+    console.log(res.data);
+    tasks = res.data.data;
+    showDialog.value = true;
+  });
+  console.log(formatTime);
 };
 
 const calendar = ref<CalendarInstance>();
@@ -262,15 +298,23 @@ const formatDate = (date: Date) => {
 };
 watch(filterStatus, (newValue) => {
   if (newValue === "all") {
-    currentTasks = [...tasks];
+    currentTaskList = [...taskList];
   } else if (newValue === "completed") {
-    currentTasks = tasks.filter((task) => task.state === 1);
+    currentTaskList = taskList.filter((task) => task.state === 1);
   } else {
-    currentTasks = tasks.filter((task) => task.state === 0);
+    currentTaskList = taskList.filter((task) => task.state !== 1);
   }
 });
-onMounted(() => {
+onBeforeMount(() => {
   healthyState.value = getHealthyState(healthy.point);
+  getTasksInfo().then((res) => {
+    res.data.data.forEach((item) => {
+      taskList.push(item);
+    });
+    currentTaskList = taskList;
+    finishedTasks = taskList.filter((task) => task.state === 1);
+    nFinishedTasks = taskList.filter((task) => task.state !== 1);
+  });
 });
 </script>
 
