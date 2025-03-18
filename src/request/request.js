@@ -5,7 +5,7 @@ import { ElMessage } from 'element-plus'
 // 创建axios实例
 const service = axios.create({
     // 接口地址
-    baseURL: "http://192.168.185.1:8080",
+    baseURL: "http://172.20.10.2:8080",
     // 超时时间
     timeout: 1000000,
 })
