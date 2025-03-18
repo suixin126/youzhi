@@ -235,13 +235,13 @@
       </div>
     </div>
     <div>
-      <template>
+      
         <TaskDialog
           v-model:visible="showDialog"
           v-model:tasks="tasks"
           @confirm="handleTaskConfirm"
         />
-      </template>
+      
     </div>
   </div>
 </template>
