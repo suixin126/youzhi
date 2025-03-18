@@ -8,36 +8,26 @@
           <h2 class="text-xl font-medium mb-8">个人信息</h2>
           <div class="flex flex-col items-center mb-8">
             <el-avatar :size="120" :src="userInfo.avatar" />
-            <el-button
-              class="mt-4 rounded-md"
-              type="primary"
-              @click="changeAvatar()"
-              >更换头像</el-button
-            >
-            <input
-              ref="avatarInputRef"
-              type="file"
-              accept="image/*"
-              style="display: none"
-            />
+            <el-button class="mt-4 rounded-md" type="primary" @click="changeAvatar()">更换头像</el-button>
+            <input ref="avatarInputRef" type="file" accept="image/*" style="display: none" />
           </div>
 
           <div class="grid grid-cols-2 gap-6">
             <div class="space-y-2">
               <div class="text-gray-500">用户名</div>
-              <div class="text-gray-900">{{ userInfo.username }}</div>
+              <div class="text-gray-900">{{ userInformation.name }}</div>
             </div>
             <div class="space-y-2">
               <div class="text-gray-500">学号</div>
-              <div class="text-gray-900">{{ userInfo.stuId }}</div>
+              <div class="text-gray-900">{{ userInformation.id }}</div>
             </div>
             <div class="space-y-2">
               <div class="text-gray-500">手机号码</div>
-              <div class="text-gray-900">{{ userInfo.phone }}</div>
+              <div class="text-gray-900">{{ userInformation.telephone }}</div>
             </div>
             <div class="space-y-2">
               <div class="text-gray-500">邮箱</div>
-              <div class="text-gray-900">{{ userInfo.email }}</div>
+              <div class="text-gray-900">{{ userInformation.email }}</div>
             </div>
           </div>
         </div>
@@ -72,50 +62,19 @@
                   上次修改时间：2024-01-15
                 </div>
               </div>
-              <el-button
-                type="primary"
-                class="rounded-md whitespace-nowrap"
-                @click="changePassword()"
-                >修改</el-button
-              >
-
-              <el-dialog
-                v-model="centerDialogVisible"
-                title="密码修改"
-                width="500"
-                destroy-on-close
-                center
-                align-center
-              >
-                <div style="margin-bottom: 20px">
-                  <span> 旧密码： </span>
-                  <el-input
-                    v-model="password1"
-                    style="width: 240px; margin-left: 20px"
-                    type="password"
-                    placeholder="请输入"
-                    show-password
-                  />
+              <el-button type="primary" class="rounded-md whitespace-nowrap" @click="changePassword()">修改</el-button>
+              <el-dialog v-model="centerDialogVisible" title="密码修改" width="500" destroy-on-close center align-center>
+                <div>
+                  <span style="margin-right: 12px;"> 旧密码： </span>
+                  <el-input v-model="password1" type="password" placeholder="请输入" show-password />
                 </div>
-                <div style="margin-bottom: 20px">
-                  <span> 新密码： </span>
-                  <el-input
-                    v-model="password2"
-                    style="width: 240px; margin-left: 20px"
-                    type="password"
-                    placeholder="请输入"
-                    show-password
-                  />
+                <div>
+                  <span style="margin-right: 12px;"> 新密码： </span>
+                  <el-input v-model="password2" type="password" placeholder="请输入" show-password />
                 </div>
-                <div style="margin-bottom: 20px">
+                <div>
                   <span> 确认密码： </span>
-                  <el-input
-                    v-model="password3"
-                    style="width: 240px; margin-left: 6px"
-                    type="password"
-                    placeholder="请输入"
-                    show-password
-                  />
+                  <el-input v-model="password3" type="password" placeholder="请输入" show-password />
                 </div>
                 <template #footer>
                   <div class="dialog-footer">
@@ -134,6 +93,15 @@
               </div>
               <el-switch v-model="security.twoFactor" />
             </div>
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-gray-700 mb-1">退出登录</div>
+                <div class="text-gray-500 text-sm">
+                  安全退出当前登录账号
+                </div>
+              </div>
+              <el-button type="danger" class="rounded-md whitespace-nowrap" @click="exit()">退出登录</el-button>
+            </div>
           </div>
         </div>
       </div>
@@ -145,10 +113,21 @@
 import { onMounted, ref } from "vue";
 import userStore from "@/store/user.js";
 import { ElMessage } from "element-plus";
+import { getUserInfo } from "@/api/api.js";
+import { updatePassword } from "@/api/api.js";
+import { logout } from "@/api/api.js";
+import { useRouter } from "vue-router";
 // 仓库
 const store = userStore();
 const { userInfo } = store;
-
+const router = useRouter();
+//用户信息
+const userInformation = ref({
+  name: "",
+  id: "",
+  telephone: "",
+  email: "",
+})
 // 选择头像
 const avatarInputRef = ref(null);
 const handleAvatarChange = (event) => {
@@ -186,28 +165,57 @@ const cancel = () => {
 };
 // 保存修改
 const save = () => {
-  console.log("修改成功");
-  if (password1.value !== userInfo.password) {
-    ElMessage.error({
-      message: "旧密码错误,修改失败",
-    });
-    console.log("旧密码错误");
-  } else if (password2.value !== password3.value) {
+  if (password2.value !== password3.value) {
     ElMessage.error({
       message: "两次输入的密码不一致,修改失败",
     });
     console.log("两次输入的密码不一致");
   } else {
-    ElMessage.success({
-      message: "修改成功",
+    updatePassword({
+      oldPassword: password1.value,
+      newPassword: password2.value,
+    }, {
+      "Content-Type": "application/json",
+    }).then((res) => {
+      console.log(res);
+      ElMessage.success({
+        message: "修改成功",
+      });
+      centerDialogVisible.value = false;
+    }).catch((err) => {
+      console.log(err);
     });
-    centerDialogVisible.value = false;
   }
 };
+//退出登录
+const exit = () => {
+  logout().then((res) => {
+    console.log(res);
+    ElMessage.success({
+      message: "退出成功",
+    });
+    localStorage.removeItem("token");
+    router.push("/login");
+  }).catch((err) => {
+    console.log(err);
+  });
+}
+//页面初始化
 onMounted(() => {
   if (avatarInputRef.value) {
     avatarInputRef.value.addEventListener("change", handleAvatarChange);
   }
+  //获取用户信息
+  getUserInfo().then((res) => {
+    console.log(res);
+    userInformation.value.name = res.data.data.name;
+    userInformation.value.id = res.data.data.id;
+    userInformation.value.telephone = res.data.data.telephone;
+    userInformation.value.email = res.data.data.email;
+    console.log(userInformation);
+  }).catch((err) => {
+    console.log(err);
+  });
 });
 
 const searchText = ref("");
@@ -240,5 +248,31 @@ const security = ref({
 
 .el-input .el-input__suffix {
   right: 12px;
+}
+
+.el-dialog {
+
+  span {
+    padding-top: 5px;
+  }
+
+  div {
+    margin-bottom: 20px;
+    margin: 0 auto;
+    width: 60%;
+    display: flex;
+  }
+
+  .el-input {
+    margin-bottom: 10px;
+    width: 200px
+  }
+}
+
+.dialog-footer {
+  margin: 20px auto;
+  width: 500px;
+  display: flex;
+  justify-content: space-between;
 }
 </style>

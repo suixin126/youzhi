@@ -12,9 +12,7 @@
               <h3 class="text-gray-500 mb-2">总学习时长</h3>
               <div class="text-3xl font-semibold">156.5h</div>
             </div>
-            <el-tag type="success" class="whitespace-nowrap"
-              >月同比增长 15%</el-tag
-            >
+            <el-tag type="success" class="whitespace-nowrap">月同比增长 15%</el-tag>
           </div>
         </div>
         <div class="bg-white rounded-lg p-6 shadow-sm">
@@ -51,11 +49,7 @@
                 <span class="text-gray-600">{{ item.time }}</span>
                 <span class="text-gray-900">{{ item.value }}%</span>
               </div>
-              <el-progress
-                :percentage="item.value"
-                :color="item.color"
-                :show-text="false"
-              />
+              <el-progress :percentage="item.value" :color="item.color" :show-text="false" />
             </div>
           </div>
         </div>
@@ -69,10 +63,7 @@
             <el-table-column prop="name" label="任务名称" />
             <el-table-column prop="status" label="状态">
               <template #default="scope">
-                <el-tag
-                  :type="getStatusType(scope.row.status)"
-                  class="whitespace-nowrap"
-                >
+                <el-tag :type="getStatusType(scope.row.status)" class="whitespace-nowrap">
                   {{ scope.row.status }}
                 </el-tag>
               </template>
@@ -86,13 +77,14 @@
       </div>
     </div>
   </div>
-  
+
 </template>
-  
-  <script lang="ts" setup>
+
+<script lang="ts" setup>
 import { ref, onMounted } from "vue";
 import { Search, Microphone, Bell } from "@element-plus/icons-vue";
 import * as echarts from "echarts";
+import { getWeekStudyTime } from "@/api/api.js";
 
 const searchText = ref("");
 const chartRef = ref<HTMLElement | null>(null);
@@ -127,6 +119,13 @@ const getStatusType = (status: string) => {
 };
 
 onMounted(() => {
+  //初始化学习时长
+  getWeekStudyTime().then((res) => {
+    console.log(res);
+  }).catch((error) => {
+    console.log(error);
+  });
+  // 初始化图表
   if (chartRef.value) {
     const chart = echarts.init(chartRef.value);
     chart.setOption({
@@ -197,8 +196,8 @@ onMounted(() => {
   }
 });
 </script>
-  
-  <style scoped>
+
+<style scoped>
 .el-input :deep(.el-input__wrapper) {
   border-radius: 24px;
   box-shadow: 0 0 0 1px #e5e7eb;
@@ -216,5 +215,3 @@ onMounted(() => {
   background-color: #f9fafb;
 }
 </style>
-  
-  

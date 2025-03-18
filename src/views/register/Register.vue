@@ -126,6 +126,7 @@ import {
 } from "@element-plus/icons-vue";
 import { register } from "@/api/api.js";
 import { ElMessage } from "element-plus";
+import { userIsExist } from "@/api/api.js";
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 const form = reactive({
@@ -149,6 +150,17 @@ const handleRegister = () => {
     ElMessage.error("密码不一致");
     return;
   }
+  //查询用户名是否存在
+  userIsExist(form.username).then((res) => {
+    console.log(res)
+    if (res.data.data == true) {
+      ElMessage.error("用户名已存在");
+      form.username = "";
+      return;
+    }
+  }).catch((err) => {
+    console.log(err)
+  })
   register(
     { name: form.username, password: form.password },
     {
