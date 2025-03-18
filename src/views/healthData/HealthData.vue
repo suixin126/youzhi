@@ -14,7 +14,9 @@
             }}</span>
           </div>
           <div class="flex items-center text-gray-500">
-            <el-icon><Check /></el-icon>
+            <el-icon>
+              <Check />
+            </el-icon>
             <span class="ml-1">已完成 {{ finishedTasks.length }} 项任务</span>
           </div>
         </div>
@@ -25,7 +27,9 @@
             <span class="text-3xl font-semibold text-emerald-500">6.5h</span>
           </div>
           <div class="flex items-center text-emerald-500">
-            <el-icon><ArrowUp /></el-icon>
+            <el-icon>
+              <ArrowUp />
+            </el-icon>
             <span class="ml-1">较昨日增加 1.2h</span>
           </div>
         </div>
@@ -107,10 +111,7 @@
                   <span class="text-blue-500">{{ footRatio * 100 }}%</span>
                 </div>
                 <div class="h-2 bg-gray-200 rounded-full">
-                  <div
-                    class="h-2 bg-blue-500 rounded-full"
-                    :style="{ width: footRatio * 100 + '%' }"
-                  ></div>
+                  <div class="h-2 bg-blue-500 rounded-full" :style="{ width: footRatio * 100 + '%' }"></div>
                 </div>
               </div>
               <div>
@@ -119,10 +120,7 @@
                   <span class="text-green-500">{{ sportRatio * 100 }}%</span>
                 </div>
                 <div class="h-2 bg-gray-200 rounded-full">
-                  <div
-                    class="h-2 bg-green-500 rounded-full"
-                    :style="{ width: sportRatio * 100 + '%' }"
-                  ></div>
+                  <div class="h-2 bg-green-500 rounded-full" :style="{ width: sportRatio * 100 + '%' }"></div>
                 </div>
               </div>
               <div>
@@ -131,10 +129,7 @@
                   <span class="text-purple-500">{{ sleepRatio * 100 }}%</span>
                 </div>
                 <div class="h-2 bg-gray-200 rounded-full">
-                  <div
-                    class="h-2 bg-purple-500 rounded-full"
-                    :style="{ width: sleepRatio * 100 + '%' }"
-                  ></div>
+                  <div class="h-2 bg-purple-500 rounded-full" :style="{ width: sleepRatio * 100 + '%' }"></div>
                 </div>
               </div>
             </div>
@@ -143,22 +138,14 @@
           <div class="bg-white rounded-lg p-6 shadow-sm relative">
             <div class="flex justify-between items-center mb-6">
               <h3 class="text-lg font-medium text-gray-900">健康记录</h3>
-              <el-button
-                size="small"
-                @click="showHealthDialog = true"
-                class="!rounded-button"
-              >
+              <el-button size="small" @click="showHealthDialog = true" class="!rounded-button">
                 查询近30天
               </el-button>
             </div>
 
             <div class="space-y-4">
               <!-- 最近3天数据展示（示例数据） -->
-              <div
-                v-for="(item, index) in visibleHealthData"
-                :key="index"
-                class="flex justify-between items-center"
-              >
+              <div v-for="(item, index) in visibleHealthData" :key="index" class="flex justify-between items-center">
                 <span class="text-gray-500">{{ item.date }}</span>
                 <span :class="typeColorMap[item.type]">
                   {{ item.typeLabel }} {{ item.value }}{{ item.unit }}
@@ -172,11 +159,7 @@
             </div>
 
             <!-- 健康数据弹窗 -->
-            <el-dialog
-              v-model="showHealthDialog"
-              title="近30天健康数据"
-              width="80%"
-            >
+            <el-dialog v-model="showHealthDialog" title="近30天健康数据" width="80%">
               <el-table :data="healthData" style="width: 100%" max-height="400">
                 <el-table-column prop="date" label="日期" width="120" />
                 <el-table-column label="步数" width="120">
@@ -217,6 +200,7 @@ import {
   totalSleepTime,
   totalSportTime,
 } from "@/utils/healthy.js";
+import { importHealthData, getHealthData, getHealthDataList, getHealthSuggestion } from "@/api/api.js";
 const store = userStore();
 const { tasks, healthy } = store;
 const finishedTasks = tasks.filter((task) => task.state === 1);
@@ -260,14 +244,13 @@ const typeColorMap = {
 };
 const generateDemoData = () => {
   // 生成30天示例数据
-  const data = [];
   const today = new Date();
 
   for (let i = 29; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(date.getDate() - i);
 
-    data.push({
+    healthData.push({
       date: date.toISOString().split("T")[0],
       type: ["sport", "foot", "sleep"][i % 3],
       steps: Math.floor(Math.random() * 10000),
@@ -276,10 +259,11 @@ const generateDemoData = () => {
       heartRate: Math.floor(Math.random() * 40 + 60),
     });
   }
-  return data;
+  return healthData;
 };
 onMounted(() => {
   healthyState.value = getHealthyState(healthy.point);
+  generateDemoData();
 });
 </script>
 

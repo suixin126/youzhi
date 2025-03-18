@@ -49,3 +49,22 @@ export const addTask = (params, headers) => {
 export const addBigTask = (params, headers) => {
     return http.post("/task/plan", params, headers);
 }
+
+//导入健康数据
+export const importHealthData = (params, headers) => {
+    return http.post("/HealthData/add", params, headers);
+}
+
+//获取当日的健康数据
+export const getHealthData = (params) => {
+    return http.get("/HealthData/getHealthDataToDay", params);
+}
+
+//获取健康数据列表
+export const getHealthDataList = (params) => {
+    return http.get("/HealthData/getAllHealthData", params);
+}
+//获取健康建议
+export const getHealthSuggestion = (params) => {
+    return http.get("/HealthData/healthAdvice", params);
+}
