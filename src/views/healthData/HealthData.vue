@@ -17,20 +17,24 @@
             <el-icon>
               <Check />
             </el-icon>
-            <span class="ml-1">已完成 {{ finishedTasks.length }} 项任务</span>
+            <span class="ml-1">已完成 {{ finishedTasks }} 项任务</span>
           </div>
         </div>
 
         <div class="bg-white rounded-lg p-6 shadow-sm">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-medium text-gray-900">学习时长</h3>
-            <span class="text-3xl font-semibold text-emerald-500">6.5h</span>
+            <span class="text-3xl font-semibold text-emerald-500">{{ workTime }}h</span>
           </div>
           <div class="flex items-center text-emerald-500">
-            <el-icon>
+            <el-icon v-if="workTimeDiff >= 0">
               <ArrowUp />
             </el-icon>
-            <span class="ml-1">较昨日增加 1.2h</span>
+            <el-icon v-else color="red">
+              <ArrowDown />
+            </el-icon>
+            <span class="ml-1 text-green-600" v-if="workTimeDiff >= 0">较昨日增加 {{ workTimeDiff }}h</span>
+            <span class="ml-1 text-red-600" v-else>较昨日减少{{ -workTimeDiff }}h</span>
           </div>
         </div>
 
@@ -231,7 +235,8 @@
 import axios from "axios";
 import { onMounted, ref, onUnmounted } from "vue";
 import { ElMessage } from "element-plus";
-import { getHealthData, getHealthDataList, getHealthSuggestion, getTasksInfo } from "@/api/api.js";
+import { getHealthData, getHealthDataList, getHealthSuggestion, getTasksInfo, getWeekStudyTime } from "@/api/api.js";
+import { ArrowDown, ArrowUp } from "@element-plus/icons-vue";
 const tasks = ref([]);
 //当天的健康数据
 const healthy = ref({
@@ -240,6 +245,11 @@ const healthy = ref({
   sleepTime: 0, // 睡眠时长
   heartRate: 0, // 心率
 })
+//工作时间
+const workTime = ref(0);
+//与最近一天工作时间的差值
+const workTimeDiff = ref(0);
+//健康建议
 const advice = ref([])
 //健康目标
 const targets = ref({
@@ -253,7 +263,7 @@ const threeDaysData = ref([]);
 //导入的健康数据
 const importData = ref(null);
 
-const finishedTasks = tasks.filter((task) => task.state === 1);
+const finishedTasks = ref(0)
 const healthyState = ref("");
 const footRatio = ref(0);
 const sleepRatio = ref(0);
@@ -292,9 +302,9 @@ onMounted(() => {
       return;
     }
     //初始化用户今日健康数据
-    healthy.value.heartRate = res.data.data[0].heartRate;
-    healthy.value.stepCount = res.data.data[0].stepCount;
-    healthy.value.sleepTime = res.data.data[0].sleepTime;
+    healthy.value.heartRate = Math.round(res.data.data[0].heartRate);
+    healthy.value.stepCount = Math.round(res.data.data[0].stepCount);
+    healthy.value.sleepTime = Math.round(res.data.data[0].sleepTime);
     //计算目标进度
     calculateProgress();
     //计算健康指数
@@ -302,22 +312,39 @@ onMounted(() => {
   }).catch((err) => {
     console.log(err);
   })
-  //获取健康建议
-  getHealthSuggestion().then((res) => {
-    console.log(res.data.message);
-    //提取健康建议
-    advice.value = extractSectionsWithoutFormat(res.data.message);
-    console.log(advice.value);
+  //如果本地仓库有健康建议，直接获取
+  if (localStorage.getItem("advice")) {
+    advice.value = JSON.parse(localStorage.getItem("advice"));
     adviceExist.value = false;
-  }).catch((err) => {
-    console.log(err);
-  })
+  }
+  else {
+    //如果本地仓库没有建议，获取健康建议
+    getHealthSuggestion().then((res) => {
+      console.log(res.data.message);
+      //提取健康建议
+      localStorage.setItem("advice", JSON.stringify(extractSectionsWithoutFormat(res.data.message)));
+      advice.value = extractSectionsWithoutFormat(res.data.message);
+      console.log(advice.value);
+      adviceExist.value = false;
+    }).catch((err) => {
+      console.log(err);
+    })
+  }
   //获取任务信息
   getTasksInfo().then((res) => {
     console.log(res.data.data);
     tasks.value = res.data.data;
+    finishedTasks.value = res.data.data.filter((item) => item.status == 1).length;
   }).catch((err) => {
     console.log(err);
+  })
+  //获取工作时间
+  getWeekStudyTime().then((res) => {
+    console.log(res.data.data[0]);
+    //转换成小时
+    workTime.value = Math.round(res.data.data[0].totalDuration / 60 * 10) / 10;
+    workTimeDiff.value = Math.round((res.data.data[0].totalDuration - res.data.data[1].totalDuration) / 60 * 10) / 10;
+    console.log(workTimeDiff.value);
   })
   // 启动健康数据切换定时器
   intervalId = setInterval(() => {

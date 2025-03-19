@@ -15,18 +15,32 @@
           </div>
           <div class="flex items-center text-gray-600">
             <el-icon class="mr-2"><Check /></el-icon>
-            <span>已完成 {{ finishedTasks.length }} 项任务</span>
+            <span
+              >已完成
+              {{ taskList.filter((task) => task.status === 1).length }}
+              项任务</span
+            >
           </div>
         </div>
 
         <div class="bg-white rounded-lg p-6 shadow-sm">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-medium">学习时长</h3>
-            <span class="text-3xl font-semibold text-green-500">6.5h</span>
+            <span class="text-3xl font-semibold text-green-500"
+              >{{ todayStudyTime }}h</span
+            >
           </div>
           <div class="flex items-center text-gray-600">
             <el-icon class="mr-2"><ArrowUp /></el-icon>
-            <span>较昨日增加 1.2h</span>
+            <span
+              >较昨日{{
+                todayStudyTime - yesterDatyStudyTime > 0 ? "增加" : "减少"
+              }}{{
+                todayStudyTime - yesterDatyStudyTime > 0
+                  ? (todayStudyTime - yesterDatyStudyTime).toFixed(1)
+                  : (yesterDatyStudyTime - todayStudyTime).toFixed(1)
+              }}h</span
+            >
           </div>
         </div>
 
@@ -93,7 +107,9 @@
                     style="text-align: center; line-height: 50px"
                     class="text-lg font-medium"
                   >
-                    {{ item.startTime.split("T")[1] }}
+                    {{ item.startTime.split("T")[1].split(":")[0] }}:{{
+                      item.startTime.split("T")[1].split(":")[1]
+                    }}
                   </div>
                 </div>
                 <div class="flex-1 ml-4">
@@ -106,9 +122,10 @@
                 </div>
                 <div style="text-align: center; line-height: 50px">
                   <el-button
-                    :type="item.state ? 'primary' : ''"
+                    :type="item.status === 1 ? 'success' : 'info'"
                     class="!rounded-button"
-                    >{{ item.state !== 1 ? "未完成" : "已完成" }}</el-button
+                    @click="changeStatus(item)"
+                    >{{ item.status !== 1 ? "未完成" : "已完成" }}</el-button
                   >
                 </div>
                 <div
@@ -216,7 +233,9 @@
             <h3 class="text-lg font-medium mb-6">今日待办</h3>
             <div class="space-y-4">
               <div
-                v-for="(item, index) in nFinishedTasks"
+                v-for="(item, index) in taskList.filter(
+                  (task) => task.status !== 1
+                )"
                 :key="index"
                 :class="
                   index % 2
@@ -225,9 +244,11 @@
                 "
               >
                 <span class="font-medium">{{ item.description }}</span>
-                <span class="text-red-500 text-sm">{{
-                  item.startTime.split("T")[1]
-                }}</span>
+                <span class="text-red-500 text-sm"
+                  >{{ item.startTime.split("T")[1].split(":")[0] }}:{{
+                    item.startTime.split("T")[1].split(":")[1]
+                  }}</span
+                >
               </div>
             </div>
           </div>
@@ -235,62 +256,524 @@
       </div>
     </div>
     <div>
-      
-        <TaskDialog
-          v-model:visible="showDialog"
-          v-model:tasks="tasks"
-          @confirm="handleTaskConfirm"
-        />
-      
+      <!-- 某日的任务 -->
+      <el-dialog
+        :show-close="false"
+        v-model="showDialog"
+        title="任务管理"
+        width="80%"
+        center
+      >
+        <el-table :data="currentTasks" border style="width: 100%">
+          <el-table-column prop="description" label="任务描述" width="200">
+            <template #default="{ row }">
+              <el-input v-model="row.description"></el-input>
+            </template>
+          </el-table-column>
+          <el-table-column prop="startTime" label="开始时间" width="180">
+            <template #default="{ row }">
+              <el-date-picker
+                v-model="row.startTime"
+                type="datetime"
+                format="YYYY-MM-DD HH:mm"
+              ></el-date-picker>
+            </template>
+          </el-table-column>
+          <el-table-column prop="endTime" label="截至时间" width="180">
+            <template #default="{ row }">
+              <el-date-picker
+                v-model="row.endTime"
+                type="datetime"
+                format="YYYY-MM-DD HH:mm"
+              ></el-date-picker>
+            </template>
+          </el-table-column>
+          <!-- 优先级 -->
+          <el-table-column prop="priority" label="优先级" width="120">
+            <template #default="{ row }">
+              <el-select v-model="row.priority">
+                <el-option
+                  v-for="item in priorityOptions"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+                />
+              </el-select>
+            </template>
+          </el-table-column>
+          <!-- 标签 -->
+          <el-table-column prop="tags" label="标签">
+            <template #default="{ row }">
+              <el-select
+                v-model="row.tags"
+                multiple
+                filterable
+                allow-create
+                placeholder="请添加标签"
+              />
+            </template>
+          </el-table-column>
+
+          <!-- 是否完成 -->
+          <el-table-column prop="status" label="状态">
+            <template #default="{ row }">
+              <el-button
+                @click="changeStatus(row)"
+                :type="row.status === 1 ? 'success' : 'info'"
+                >{{ row.status === 1 ? "已完成" : "未完成" }}</el-button
+              >
+            </template>
+          </el-table-column>
+
+          <!-- 操作列 -->
+          <el-table-column label="操作" width="80">
+            <template #default="{ row }">
+              <el-button
+                type="danger"
+                icon="Delete"
+                circle
+                @click="handleTasksDelete(row)"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-pagination
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page="currentPage"
+          :page-sizes="[3, 5, 10]"
+          :page-size="pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="tasks.length"
+        >
+        </el-pagination>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="cancelTasks()">取消</el-button>
+            <el-button type="primary" @click="saveTasks()"> 保存 </el-button>
+          </div>
+        </template>
+      </el-dialog>
+
+      <!-- 详情信息 -->
+      <el-dialog
+        :show-close="false"
+        v-model="detailVisible"
+        title="任务详情"
+        width="60%"
+        center
+      >
+        <el-table :data="detailTask" style="width: 100%">
+          <!-- 任务描述 -->
+          <el-table-column prop="description" label="任务描述" width="300">
+            <template #default="{ row }">
+              <el-input v-model="row.description" />
+            </template>
+          </el-table-column>
+
+          <!-- 开始时间 -->
+          <el-table-column prop="startTime" label="开始时间">
+            <template #default="{ row }">
+              <el-date-picker
+                v-model="row.startTime"
+                type="datetime"
+                format="YYYY-MM-DD HH:mm"
+              />
+            </template>
+          </el-table-column>
+          <!-- 截止时间 -->
+          <el-table-column prop="endTime" label="截止时间">
+            <template #default="{ row }">
+              <el-date-picker
+                v-model="row.endTime"
+                type="datetime"
+                format="YYYY-MM-DD HH:mm"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-table :data="detailTask" style="width: 100%">
+          <!-- 优先级 -->
+          <el-table-column prop="priority" label="优先级" width="120">
+            <template #default="{ row }">
+              <el-select v-model="row.priority">
+                <el-option
+                  v-for="item in priorityOptions"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+                />
+              </el-select>
+            </template>
+          </el-table-column>
+
+          <!-- 标签 -->
+          <el-table-column prop="tags" label="标签">
+            <template #default="{ row }">
+              <el-select
+                v-model="row.tags"
+                multiple
+                filterable
+                allow-create
+                placeholder="请添加标签"
+              />
+            </template>
+          </el-table-column>
+          <!-- 是否完成 -->
+          <el-table-column prop="status" label="状态">
+            <template #default="{ row }">
+              <el-button
+                @click="BenDichangeStatus(row)"
+                :type="row.status === 1 ? 'success' : 'info'"
+                >{{ row.status === 1 ? "已完成" : "未完成" }}</el-button
+              >
+            </template>
+          </el-table-column>
+          <!-- 操作列 -->
+          <el-table-column label="操作" width="100">
+            <template #default="{ row }">
+              <el-button
+                type="danger"
+                icon="Delete"
+                circle
+                @click="handleTaskDelete(row)"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="cancelTask()">取消</el-button>
+            <el-button type="primary" @click="saveTask()"> 保存 </el-button>
+          </div>
+        </template>
+      </el-dialog>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, watch, onBeforeMount } from "vue";
+import { ref, reactive, watch, onBeforeMount, computed } from "vue";
 import userStore from "@/store/user.js";
 import { format } from "date-fns";
-import type { CalendarDateType, CalendarInstance } from "element-plus";
+import { ElMessageBox, type CalendarInstance, ElMessage } from "element-plus";
 import { getHealthyState } from "@/utils/healthy.js";
-import { getTasksInfo, getRandomTask } from "@/api/api.js";
-import TaskDialog from "./TaskDialog.vue";
+import {
+  getTasksInfo,
+  getRandomTask,
+  deleteTask,
+  updateStatus,
+  updateTaskInfo,
+  getWeekStudyTime,
+} from "@/api/api.js";
+// 全屏动画加载
+const isLoading = ref(true);
+// 当前页数
+const currentPage = ref(1);
+// 每页大小
+const pageSize = ref(3);
+const yesterDatyStudyTime = ref(0);
+const todayStudyTime = ref(0);
+// 当前任务
+const currentTasks = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tasks.slice(start, end);
+});
+// 处理大小变化
+const handleSizeChange = (newSize) => {
+  pageSize.value = newSize;
+};
+// 处理当前页
+const handleCurrentChange = (page) => {
+  currentPage.value = page;
+};
+// 本地状态改变
+const BenDichangeStatus = (item) => {
+  if (item.status === 1) {
+    item.status = -1;
+  } else {
+    item.status = 1;
+  }
+};
+// 优先级
+const priorityOptions = [1, 2, 3, 4, 5];
+// 某日的任务
 let tasks = reactive([]);
+// 某日任务展示
 const showDialog = ref(false);
-const handleTaskConfirm = (updatedTasks) => {
-  // 处理更新后的任务数据
-  console.log("更新后的任务列表:", updatedTasks);
+// 修改状态
+const changeStatus = (item) => {
+  if (item.status === 1) {
+    item.status = -1;
+  } else {
+    item.status = 1;
+  }
+  taskList.forEach((task) => {
+    if (task.id === item.id) {
+      task.status = item.status;
+    }
+  });
+  updateStatus(
+    {
+      taskId: item.id,
+      status: item.status,
+    },
+    {
+      "Content-Type": "application/json",
+    }
+  )
+    .then((res) => {
+      console.log(res.data);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
+// 任务详情取消
+const cancelTask = () => {
+  detailVisible.value = false;
+  detailTask.length = 0;
+  taskList.length = 0;
+  // 重新获取任务
+  getTasksInfo()
+    .then((res) => {
+      if (res.data.data) {
+        res.data.data.forEach((item) => {
+          taskList.push(item);
+        });
+        currentTaskList = taskList.sort((a, b) => {
+          const dateA = new Date(a.startTime).getTime(); // 获取时间戳
+          const dateB = new Date(b.startTime).getTime(); // 获取时间戳
+          return dateA - dateB;
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
+};
+// 多任务取消
+const cancelTasks = () => {
   showDialog.value = false;
+};
+// 删除多任务
+const handleTasksDelete = (row) => {
+  ElMessageBox.confirm("是否删除该任务?", "Warning", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(() => {
+      deleteTask(
+        {
+          taskId: row.id,
+        },
+        {
+          "Content-Type": "application/json",
+        }
+      )
+        .then((res) => {
+          console.log(res.data);
+          ElMessage({
+            type: "success",
+            message: "删除成功",
+          });
+          const index = tasks.findIndex((item) => item.id === row.id);
+          if (index !== -1) {
+            tasks.splice(index, 1);
+          }
+        })
+        .catch((err) => {
+          ElMessage({
+            type: "error",
+            message: err.message,
+          });
+        });
+    })
+    .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "取消删除",
+      });
+    });
+};
+// 删除单任务
+const handleTaskDelete = (row) => {
+  ElMessageBox.confirm("是否删除该任务?", "Warning", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(() => {
+      deleteTask(
+        {
+          taskId: row.id,
+        },
+        {
+          "Content-Type": "application/json",
+        }
+      )
+        .then((res) => {
+          console.log(res.data);
+          ElMessage({
+            type: "success",
+            message: "删除成功",
+          });
+          const index = currentTaskList.findIndex((item) => item.id === row.id);
+          if (index !== -1) {
+            currentTaskList.splice(index, 1);
+          }
+          detailVisible.value = false;
+          detailTask.length = 0;
+        })
+        .catch((err) => {
+          ElMessage({
+            type: "error",
+            message: err.message,
+          });
+        });
+    })
+    .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "取消删除",
+      });
+    });
+};
+// 保存多修改
+const saveTasks = () => {
+  ElMessageBox.confirm("是否保存更改?", "Warning", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(() => {
+      ElMessage({
+        type: "success",
+        message: "修改成功",
+      });
+      updateTaskInfo(tasks, {
+        "Content-Type": "application/json",
+      });
+      showDialog.value = false;
+    })
+    .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "取消修改",
+      });
+    });
+};
+// 保存单个任务
+const saveTask = () => {
+  ElMessageBox.confirm("是否保存更改?", "Warning", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(() => {
+      updateTaskInfo(detailTask, {
+        "Content-Type": "application/json",
+      })
+        .then((res) => {
+          console.log(res.data);
+          ElMessage({
+            type: "success",
+            message: "修改成功",
+          });
+          detailVisible.value = false;
+          detailTask.length = 0;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+
+      taskList.length = 0;
+      // 重新获取任务
+      getTasksInfo()
+        .then((res) => {
+          if (res.data.data) {
+            res.data.data.forEach((item) => {
+              taskList.push(item);
+            });
+            currentTaskList = taskList.sort((a, b) => {
+              const dateA = new Date(a.startTime).getTime(); // 获取时间戳
+              const dateB = new Date(b.startTime).getTime(); // 获取时间戳
+              return dateA - dateB;
+            });
+          }
+        })
+        .catch((err) => {
+          console.log(err.message);
+        });
+    })
+    .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "取消修改",
+      });
+    });
 };
 const store = userStore();
 const { healthy } = store;
+// 健康状态
 const healthyState = ref("");
+// 任务类型选择
 const filterStatus = ref("all");
+// 任务列表
 const taskList = reactive([]);
+// 当前选择的任务
 let currentTaskList = reactive([]);
-let finishedTasks = reactive([]);
-let nFinishedTasks = reactive([]);
+// 当前的详情任务
+let detailTask = reactive([]);
 const value = ref(new Date());
-const detailVisible = ref(true);
+// 任务详情展示
+const detailVisible = ref(false);
 const showDetailDialog = (task) => {
+  console.log(task);
+  detailTask.push(task);
   detailVisible.value = true;
 };
 // 处理日历单元格点击事件
 const handleCellClick = (date) => {
+  tasks.length = 0;
+  showDialog.value = true;
   const formatTime = formatDate(date);
   getRandomTask({
     date: formatTime,
   }).then((res) => {
     console.log(res.data);
-    tasks = res.data.data;
-    showDialog.value = true;
+    res.data.data.forEach((item) => {
+      tasks.push(item);
+    });
   });
-  console.log(formatTime);
 };
 
 const calendar = ref<CalendarInstance>();
-const selectDate = (val: CalendarDateType) => {
-  if (!calendar.value) return;
-  calendar.value.selectDate(val);
+// 日期切换逻辑
+const selectDate = (type) => {
+  let date = new Date(value.value);
+
+  switch (type) {
+    case "prev-year":
+      date.setFullYear(date.getFullYear() - 1);
+      break;
+    case "prev-month":
+      date.setMonth(date.getMonth() - 1);
+      break;
+    case "today":
+      date = new Date();
+      break;
+    case "next-month":
+      date.setMonth(date.getMonth() + 1);
+      break;
+    case "next-year":
+      date.setFullYear(date.getFullYear() + 1);
+      break;
+  }
+
+  value.value = date;
 };
 // 格式化日期函数
 const formatDate = (date: Date) => {
@@ -300,25 +783,62 @@ watch(filterStatus, (newValue) => {
   if (newValue === "all") {
     currentTaskList = [...taskList];
   } else if (newValue === "completed") {
-    currentTaskList = taskList.filter((task) => task.state === 1);
+    currentTaskList = taskList.filter((task) => task.status === 1);
   } else {
-    currentTaskList = taskList.filter((task) => task.state !== 1);
+    currentTaskList = taskList.filter((task) => task.status !== 1);
   }
 });
-onBeforeMount(() => {
+const loadAllData = async () => {
   healthyState.value = getHealthyState(healthy.point);
-  getTasksInfo().then((res) => {
-    res.data.data.forEach((item) => {
-      taskList.push(item);
+  getTasksInfo()
+    .then((res) => {
+      if (res.data.data) {
+        res.data.data.forEach((item) => {
+          taskList.push(item);
+        });
+        currentTaskList = taskList.sort((a, b) => {
+          const dateA = new Date(a.startTime).getTime(); // 获取时间戳
+          const dateB = new Date(b.startTime).getTime(); // 获取时间戳
+          return dateA - dateB;
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err.message);
     });
-    currentTaskList = taskList;
-    finishedTasks = taskList.filter((task) => task.state === 1);
-    nFinishedTasks = taskList.filter((task) => task.state !== 1);
-  });
+  getWeekStudyTime()
+    .then((res) => {
+      console.log(res.data.data)
+      todayStudyTime.value = parseFloat(
+        (res.data.data[0].totalDuration / 60).toFixed(1)
+      );
+      yesterDatyStudyTime.value = parseFloat(
+        (res.data.data[1].totalDuration / 60).toFixed(1)
+      );
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
+// 初始化加载
+onBeforeMount(async () => {
+  try {
+    // 同时等待：1.所有数据加载 2.至少2秒时长
+    await Promise.all([
+      loadAllData(),
+    ]);
+  } catch (error) {
+    ElMessage.error(`数据加载失败: ${error.message}`);
+  } finally {
+    isLoading.value = false;
+    localStorage.setItem("isLoading", "false");
+  }
 });
 </script>
 
 <style scoped>
+/* 全屏加载样式 */
+
 :deep(.el-input__wrapper) {
   background-color: #f3f4f6;
   border: none;
