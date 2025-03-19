@@ -9,28 +9,37 @@
         <div class="bg-white rounded-lg p-6 shadow-sm">
           <div class="flex justify-between items-start">
             <div>
-              <h3 class="text-gray-500 mb-2">总学习时长</h3>
-              <div class="text-3xl font-semibold">156.5h</div>
+              <h3 class="text-gray-500 mb-2">总学习时长(本周)</h3>
+              <div class="text-3xl font-semibold">{{ totalTime }}h</div>
             </div>
-            <el-tag type="success" class="whitespace-nowrap">月同比增长 15%</el-tag>
           </div>
         </div>
         <div class="bg-white rounded-lg p-6 shadow-sm">
           <div class="flex justify-between items-start">
             <div>
-              <h3 class="text-gray-500 mb-2">完成任务</h3>
-              <div class="text-3xl font-semibold text-green-500">89</div>
+              <h3 class="text-gray-500 mb-2">完成任务(本周)</h3>
+              <div class="text-3xl font-semibold text-green-500">
+                {{ taskList.filter((task) => task.status === 1).length }}
+              </div>
             </div>
-            <el-tag type="info">完成率 92%</el-tag>
+            <el-tag type="info"
+              >完成率
+              {{
+                (
+                  taskList.filter((task) => task.status === 1).length /
+                  taskList.length
+                ).toFixed(1)
+              }}%</el-tag
+            >
           </div>
         </div>
         <div class="bg-white rounded-lg p-6 shadow-sm">
           <div class="flex justify-between items-start">
             <div>
-              <h3 class="text-gray-500 mb-2">活跃天数</h3>
-              <div class="text-3xl font-semibold text-orange-500">26</div>
+              <h3 class="text-gray-500 mb-2">活跃天数（本周）</h3>
+              <div class="text-3xl font-semibold text-orange-500">{{ huoyueDays }}</div>
             </div>
-            <el-tag>本月已过 28 天</el-tag>
+            <el-tag>本周已过 {{ days }} 天</el-tag>
           </div>
         </div>
       </div>
@@ -49,7 +58,11 @@
                 <span class="text-gray-600">{{ item.time }}</span>
                 <span class="text-gray-900">{{ item.value }}%</span>
               </div>
-              <el-progress :percentage="item.value" :color="item.color" :show-text="false" />
+              <el-progress
+                :percentage="item.value"
+                :color="item.color"
+                :show-text="false"
+              />
             </div>
           </div>
         </div>
@@ -63,7 +76,10 @@
             <el-table-column prop="name" label="任务名称" />
             <el-table-column prop="status" label="状态">
               <template #default="scope">
-                <el-tag :type="getStatusType(scope.row.status)" class="whitespace-nowrap">
+                <el-tag
+                  :type="getStatusType(scope.row.status)"
+                  class="whitespace-nowrap"
+                >
                   {{ scope.row.status }}
                 </el-tag>
               </template>
@@ -77,16 +93,15 @@
       </div>
     </div>
   </div>
-
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from "vue";
-import { Search, Microphone, Bell } from "@element-plus/icons-vue";
+import { ref, onMounted, reactive } from "vue";
 import * as echarts from "echarts";
-import { getWeekStudyTime } from "@/api/api.js";
-
-const searchText = ref("");
+import { getWeekStudyTime, getRandomTask } from "@/api/api.js";
+import { format } from "date-fns";
+let taskList = reactive([]);
+const totalTime = ref(0);
 const chartRef = ref<HTMLElement | null>(null);
 const subjectChartRef = ref<HTMLElement | null>(null);
 
@@ -117,14 +132,27 @@ const getStatusType = (status: string) => {
       return "info";
   }
 };
-
+const today = new Date();
+const days = ref(0);
+const weekDays = [7, 1, 2, 3, 4, 5, 6];
+const huoyueDays = ref(0);
+// 格式化日期函数
+const formatDate = (date: Date) => {
+  return format(date, "yyyy-MM-dd");
+};
 onMounted(() => {
+  days.value = weekDays[today.getDay()];
   //初始化学习时长
-  getWeekStudyTime().then((res) => {
-    console.log(res);
-  }).catch((error) => {
-    console.log(error);
-  });
+  getWeekStudyTime()
+    .then((res) => {
+      res.data.data.forEach((item) => {
+        totalTime.value += item.totalDuration;
+      });
+      totalTime.value = parseFloat((totalTime.value / 60).toFixed(1));
+    })
+    .catch((error) => {
+      console.log(error);
+    });
   // 初始化图表
   if (chartRef.value) {
     const chart = echarts.init(chartRef.value);
@@ -193,6 +221,41 @@ onMounted(() => {
         },
       ],
     });
+  }
+
+  // 获取近七天任务
+  for (let i = 0; i < 7; i++) {
+    let date = new Date(today);
+    date.setDate(today.getDate() - i);
+    getRandomTask({
+      date: formatDate(date),
+    }).then((res) => {
+      res.data.data.forEach((item) => {
+        taskList.push(item);
+      });
+    });
+  }
+
+  if (localStorage.getItem("星期一")) {
+    huoyueDays.value++;
+  }
+  if (localStorage.getItem("星期二")) {
+    huoyueDays.value++;
+  }
+  if (localStorage.getItem("星期三")) {
+    huoyueDays.value++;
+  }
+  if (localStorage.getItem("星期四")) {
+    huoyueDays.value++;
+  }
+  if (localStorage.getItem("星期五")) {
+    huoyueDays.value++;
+  }
+  if (localStorage.getItem("星期六")) {
+    huoyueDays.value++;
+  }
+  if (localStorage.getItem("星期日")) {
+    huoyueDays.value++;
   }
 });
 </script>

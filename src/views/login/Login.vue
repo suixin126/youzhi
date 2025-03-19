@@ -3,7 +3,8 @@
   <div class="min-h-screen flex">
     <!-- 左侧品牌区域 -->
     <div
-      class="w-1/2 relative bg-gradient-to-br from-indigo-500 to-purple-600 p-12 flex flex-col justify-between text-white">
+      class="w-1/2 relative bg-gradient-to-br from-indigo-500 to-purple-600 p-12 flex flex-col justify-between text-white"
+    >
       <div class="text-2xl font-bold">悠智</div>
 
       <div class="z-10 relative">
@@ -15,7 +16,11 @@
       </div>
 
       <div class="absolute inset-0 opacity-10">
-        <img :src="heroImage" alt="Office Scene" class="w-full h-full object-cover" />
+        <img
+          :src="heroImage"
+          alt="Office Scene"
+          class="w-full h-full object-cover"
+        />
       </div>
 
       <div class="text-sm opacity-70">© 2024 悠智 保留所有权利</div>
@@ -29,7 +34,11 @@
 
         <form @submit.prevent="handleLogin" class="space-y-6">
           <div class="relative">
-            <el-input v-model="form.username" placeholder="用户名" class="w-full !rounded-button">
+            <el-input
+              v-model="form.username"
+              placeholder="用户名"
+              class="w-full !rounded-button"
+            >
               <template #prefix>
                 <el-icon>
                   <User />
@@ -39,15 +48,22 @@
           </div>
 
           <div class="relative">
-            <el-input v-model="form.password" :type="showPassword ? 'text' : 'password'" placeholder="密码"
-              class="w-full !rounded-button">
+            <el-input
+              v-model="form.password"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="密码"
+              class="w-full !rounded-button"
+            >
               <template #prefix>
                 <el-icon>
                   <Lock />
                 </el-icon>
               </template>
               <template #suffix>
-                <el-icon class="cursor-pointer" @click="showPassword = !showPassword">
+                <el-icon
+                  class="cursor-pointer"
+                  @click="showPassword = !showPassword"
+                >
                   <component :is="showPassword ? 'View' : 'Hide'" />
                 </el-icon>
               </template>
@@ -56,10 +72,16 @@
 
           <div class="flex items-center justify-between">
             <el-checkbox v-model="form.remember">记住密码</el-checkbox>
-            <a href="#" class="text-indigo-600 hover:text-indigo-800">忘记密码？</a>
+            <a href="#" class="text-indigo-600 hover:text-indigo-800"
+              >忘记密码？</a
+            >
           </div>
 
-          <el-button type="primary" class="w-full !rounded-button" @click="handleLogin">
+          <el-button
+            type="primary"
+            class="w-full !rounded-button"
+            @click="handleLogin"
+          >
             登录
           </el-button>
 
@@ -79,7 +101,11 @@
 
           <div class="text-center">
             <span class="text-gray-600">还没有账号？</span>
-            <a href="#/register" class="text-indigo-600 hover:text-indigo-800 ml-1">立即注册</a>
+            <a
+              href="#/register"
+              class="text-indigo-600 hover:text-indigo-800 ml-1"
+              >立即注册</a
+            >
           </div>
         </form>
       </div>
@@ -88,7 +114,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, onBeforeMount } from "vue";
 import { login } from "@/api/api.js";
 import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
@@ -123,6 +149,15 @@ const handleLogin = () => {
     console.log(res);
     if (res.data.status === 200) {
       ElMessage.success("登录成功");
+      if (form.remember) {
+        // 如果用户勾选了“记住密码”，将用户名和密码存储到 localStorage 中
+        localStorage.setItem("username", form.username);
+        localStorage.setItem("password", form.password);
+      } else {
+        // 如果用户取消勾选“记住密码”，清除 localStorage 中的数据
+        localStorage.removeItem("username");
+        localStorage.removeItem("password");
+      }
       // 设置token
       localStorage.setItem("token", res.data.data.token);
       router.push("/");
@@ -131,6 +166,17 @@ const handleLogin = () => {
     }
   });
 };
+onBeforeMount(() => {
+  // 从 localStorage 中读取用户名和密码
+  const savedUsername = localStorage.getItem("username") || "";
+  const savedPassword = localStorage.getItem("password") || "";
+  form.username = savedUsername;
+  form.password = savedPassword;
+  // 如果有保存的数据，默认勾选“记住密码”
+  if (savedUsername && savedPassword) {
+    form.remember = true;
+  }
+});
 </script>
 
 <style scoped>

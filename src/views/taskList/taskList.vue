@@ -10,15 +10,25 @@
           <div class="flex items-end">
             <span class="text-4xl font-medium">{{ taskList.length }}</span>
             <span class="text-gray-500 ml-3"
-              >已完成 {{ finishedTasks.length }} 项任务</span
+              >已完成
+              {{ taskList.filter((task) => task.status === 1).length }}
+              项任务</span
             >
           </div>
         </div>
         <div class="bg-white rounded-lg p-6 shadow-sm">
           <div class="text-gray-600 mb-2">学习时长</div>
           <div class="flex items-end">
-            <span class="text-4xl font-medium">6.5h</span>
-            <span class="text-green-500 ml-3">较昨日增加 1.2h</span>
+            <span class="text-4xl font-medium">{{ todayStudyTime }}h</span>
+            <span class="text-green-500 ml-3"
+              >较昨日{{
+                todayStudyTime - yesterDatyStudyTime > 0 ? "增加" : "减少"
+              }}{{
+                todayStudyTime - yesterDatyStudyTime > 0
+                  ? (todayStudyTime - yesterDatyStudyTime).toFixed(1)
+                  : (yesterDatyStudyTime - todayStudyTime).toFixed(1)
+              }}h</span
+            >
           </div>
         </div>
         <div class="bg-white rounded-lg p-6 shadow-sm">
@@ -44,10 +54,15 @@
                 </template>
               </el-table-column>
               <el-table-column prop="description" label="任务名称" />
-              <el-table-column prop="endTime" label="截止时间" width="180" />
+              <el-table-column
+                prop="startTime"
+                :formatter="formatTime"
+                label="开始时间"
+                width="180"
+              />
               <el-table-column prop="priority" label="优先级" width="100">
                 <template #default="{ row }">
-                  <el-tag :type="getPriorityType(row.priority)" size="small">
+                  <el-tag size="small">
                     {{ row.priority }}
                   </el-tag>
                 </template>
@@ -61,14 +76,6 @@
               </el-table-column>
             </el-table>
           </div>
-
-          <!-- 底部任务统计 -->
-          <div class="grid grid-cols-4 gap-6 mt-8">
-            <div class="bg-white rounded-lg p-6 shadow-sm">
-              <div class="text-orange-500 mb-2">大任务</div>
-              <div class="text-3xl font-medium">{{ bigTasks.length }}</div>
-            </div>
-          </div>
         </div>
 
         <!-- 右侧新建任务 -->
@@ -77,11 +84,12 @@
             <div class="flex items-center justify-between mb-6">
               <h2 class="text-xl font-medium">新建任务</h2>
               <el-button
-                type="primary"
+                :type="isListening ? 'info' : 'primary'"
                 class="flex items-center !rounded-button"
+                @click="toggleRecording"
               >
                 <el-icon class="mr-1"><Microphone /></el-icon>
-                {{ isLuZhi ? "停止录音" : "语音输入" }}
+                {{ isListening ? "停止录音" : "语音输入" }}
               </el-button>
             </div>
 
@@ -126,29 +134,24 @@
                 <el-option label="4" value="4" />
                 <el-option label="5" value="5" />
               </el-select>
-              <div>
-                <div class="mb-2" v-if="taskType == 'small'">任务标签</div>
-                <div class="flex flex-wrap gap-2" v-if="taskType == 'small'">
-                  <el-select
-                    v-model="newTask.tags"
-                    multiple
-                    placeholder="选择标签"
-                    class="flex-1"
-                  >
-                    <el-option
-                      v-for="tag in tagOptions"
-                      :key="tag"
-                      :label="tag"
-                      :value="tag"
-                    />
-                  </el-select>
-                </div>
+              <div v-if="taskType == 'small'">
+                <div class="mb-2">任务标签</div>
+                <el-select
+                  v-model="newTask.tags"
+                  multiple
+                  filterable
+                  allow-create
+                  placeholder="请添加标签"
+                />
               </div>
 
               <el-dialog v-model="centerDialogVisible" width="700" align-center>
                 <div class="border rounded p-4">
+                  <!-- 标题和添加按钮 -->
                   <div class="flex items-center justify-between mb-4">
-                    <span class="font-medium">子任务列表</span>
+                    <span class="font-medium"
+                      >子任务列表（共{{ totalSubTasks }}项）</span
+                    >
                     <el-button
                       type="primary"
                       size="small"
@@ -158,75 +161,99 @@
                       添加子任务
                     </el-button>
                   </div>
-                  <div
-                    v-for="(subTask, index) in newTask.subTasks"
-                    :key="index"
-                    class="mb-4 space-y-2"
-                  >
-                    <div class="flex gap-2 items-center">
-                      <el-input
-                        v-model="subTask.description"
-                        placeholder="任务名称"
-                        class="flex-1"
-                      />
-                      <el-select
-                        v-model="subTask.priority"
-                        placeholder="优先级"
-                        class="w-28"
-                      >
-                        <el-option label="高" value="high" />
-                        <el-option label="中" value="medium" />
-                        <el-option label="低" value="low" />
-                      </el-select>
-                      <el-button
-                        type="danger"
-                        size="small"
-                        class="!rounded-button"
-                        @click="removeSubTask(index)"
-                        >删除</el-button
-                      >
-                    </div>
 
-                    <div class="flex gap-2">
-                      <el-date-picker
-                        v-model="subTask.startTime"
-                        type="datetime"
-                        placeholder="开始时间"
-                        class="flex-1"
-                      />
-                      <el-date-picker
-                        v-model="subTask.endTime"
-                        type="datetime"
-                        placeholder="截止时间"
-                        class="flex-1"
-                      />
-                    </div>
-
-                    <div class="flex gap-2">
-                      <el-select
-                        v-model="subTask.tags"
-                        multiple
-                        placeholder="选择标签"
-                        class="flex-1"
-                      >
-                        <el-option
-                          v-for="tag in tagOptions"
-                          :key="tag"
-                          :label="tag"
-                          :value="tag"
+                  <!-- 分页内容 -->
+                  <template v-if="paginatedSubTasks.length > 0">
+                    <!-- 子任务列表 -->
+                    <div
+                      v-for="(subTask, index) in paginatedSubTasks"
+                      :key="currentPage * pageSize + index"
+                      class="mb-4 space-y-2"
+                    >
+                      <div class="flex gap-2 items-center">
+                        <el-input
+                          v-model="subTask.description"
+                          placeholder="任务名称"
+                          class="flex-1"
                         />
-                      </el-select>
+                        <el-select
+                          v-model="subTask.priority"
+                          placeholder="优先级"
+                          class="w-28"
+                        >
+                          <el-option label="1" value="1" />
+                          <el-option label="2" value="2" />
+                          <el-option label="3" value="3" />
+                          <el-option label="4" value="4" />
+                          <el-option label="5" value="5" />
+                        </el-select>
+                        <el-button
+                          type="danger"
+                          size="small"
+                          class="!rounded-button"
+                          @click="removeSubTask(index)"
+                          >删除</el-button
+                        >
+                      </div>
+
+                      <div class="flex gap-2">
+                        <el-date-picker
+                          v-model="subTask.startTime"
+                          type="datetime"
+                          placeholder="开始时间"
+                          class="flex-1"
+                        />
+                        <el-date-picker
+                          v-model="subTask.endTime"
+                          type="datetime"
+                          placeholder="截止时间"
+                          class="flex-1"
+                        />
+                      </div>
+
+                      <div class="flex gap-2">
+                        <el-select
+                          v-model="subTask.tags"
+                          multiple
+                          placeholder="选择标签"
+                          class="flex-1"
+                        >
+                          <el-option
+                            v-for="tag in tagOptions"
+                            :key="tag"
+                            :label="tag"
+                            :value="tag"
+                          />
+                        </el-select>
+                      </div>
                     </div>
+
+                    <!-- 分页控件 -->
+                    <el-pagination
+                      small
+                      layout="prev, pager, next"
+                      :current-page="currentPage"
+                      :page-size="pageSize"
+                      :total="totalSubTasks"
+                      @current-change="handlePageChange"
+                      class="mt-4 justify-center"
+                    />
+                  </template>
+
+                  <!-- 无数据提示 -->
+                  <div v-else class="text-gray-400 text-center py-4">
+                    暂无子任务，点击上方按钮添加
                   </div>
                 </div>
+
                 <template #footer>
                   <div class="dialog-footer">
                     <el-button @click="centerDialogVisible = false"
                       >取消</el-button
                     >
-                    <el-button type="primary" @click="commitTask()">
-                      确认
-                    </el-button>
+                    <el-button type="primary" @click="commitTask()"
+                      >确认</el-button
+                    >
                   </div>
                 </template>
               </el-dialog>
@@ -244,14 +271,22 @@
       </div>
     </div>
 
-    <div v-if="isLoading" class="loading-animation">
-      <div class="spinner"></div>
+    <div v-if="isLoading" class="fullscreen-loading">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">任务分解中...</div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, computed, reactive } from "vue";
+import {
+  ref,
+  reactive,
+  onBeforeMount,
+  onMounted,
+  onUnmounted,
+  computed,
+} from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import userStore from "@/store/user.js";
 import { getHealthyState } from "@/utils/healthy.js";
@@ -263,23 +298,86 @@ import {
   updateStatus,
   addBigTask1,
   deleteTask,
+  getWeekStudyTime,
 } from "@/api/api.js";
+// 分页相关状态
+const currentPage = ref(1);
+const pageSize = ref(5);
+const totalSubTasks = computed(() => newTask.value.subTasks.length);
+const paginatedSubTasks = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return newTask.value.subTasks.slice(start, start + pageSize.value);
+});
+// 分页切换
+const handlePageChange = (page) => {
+  currentPage.value = page;
+};
+const isListening = ref(false);
+let recognition = null;
 
+// 初始化语音识别
+const initializeRecognition = () => {
+  const SpeechRecognition =
+    (window as any).SpeechRecognition ||
+    (window as any).webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    console.error("当前浏览器不支持语音识别");
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = "zh-CN"; // 设置中文识别
+
+  recognition.onresult = (event) => {
+    const current = event.resultIndex;
+    const transcriptResult = event.results[current][0].transcript;
+    newTask.value.description = event.results[current][0].transcript;
+  };
+
+  recognition.onerror = (event) => {
+    console.error("语音识别错误:", event.error);
+  };
+};
+
+// 切换录音状态
+const toggleRecording = () => {
+  if (!recognition) return;
+
+  if (!isListening.value) {
+    recognition.start();
+  } else {
+    recognition.stop();
+  }
+  isListening.value = !isListening.value;
+};
+
+// 初始化组件时加载语音识别
+onMounted(() => {
+  initializeRecognition();
+});
+onUnmounted(() => {
+  recognition.stop();
+  recognition = null;
+  isListening.value = false;
+});
+// 格式化日期
+const formatTime = (row, column, cellValue) => {
+  if (!cellValue) return ""; // 如果没有值，返回空字符串
+  const time = new Date(cellValue); // 将字符串转换为 Date 对象
+  const hours = time.getHours().toString().padStart(2, "0"); // 获取小时并补零
+  const minutes = time.getMinutes().toString().padStart(2, "0"); // 获取分钟并补零
+  return `${hours}:${minutes}`; // 返回 HH:mm 格式
+};
 const centerDialogVisible = ref(false);
 const store = userStore();
-const { tasks, healthy } = store;
-// 使用 computed 创建响应式计算属性
-const bigTasks = computed(() =>
-  tasks.filter((task) => task.subTasks.length !== 0)
-);
 
+const { healthy } = store;
 let healthyState = ref("");
 const taskList = ref([]);
-const finishedTasks = computed(() =>
-  taskList.value.filter((task) => task.status === 1)
-);
 const addSubTask = () => {
-  console.log(666);
   newTask.value.subTasks.push({
     description: "",
     priority: null,
@@ -288,9 +386,15 @@ const addSubTask = () => {
     tags: [],
     repeat: "false",
   });
+  // 自动跳转到最后一页
+  currentPage.value = Math.ceil(newTask.value.subTasks.length / pageSize.value);
 };
 const removeSubTask = (index) => {
   newTask.value.subTasks.splice(index, 1);
+  // 如果当前页没有数据且不是第一页，返回上一页
+  if (paginatedSubTasks.value.length === 0 && currentPage.value > 1) {
+    currentPage.value--;
+  }
 };
 const taskType = ref("small");
 // 新任务
@@ -305,17 +409,9 @@ const newTask = ref({
   subTasks: [],
 });
 
-const tagOptions = reactive(["学习", "紧急", "日常"]);
+const tagOptions = reactive([]);
 const selectedTags = ref([]);
 
-const getPriorityType = (priority) => {
-  const types = {
-    高: "danger",
-    中: "warning",
-    低: "info",
-  };
-  return types[priority] || "info";
-};
 const deleteSTask = (row) => {
   ElMessageBox.confirm("确认删除?", "Warning", {
     confirmButtonText: "确认",
@@ -352,12 +448,11 @@ const deleteSTask = (row) => {
       });
     });
 };
-const isLuZhi = ref(false);
 // 任务状态切换
 const toggleCheck = (row) => {
-  if(row.status === 1){
+  if (row.status === 1) {
     row.status = 0;
-  }else {
+  } else {
     row.status = 1;
   }
   updateStatus(
@@ -381,6 +476,16 @@ const createTask = () => {
   }
 
   if (taskType.value === "small") {
+    taskList.value.push({
+      description: newTask.value.description,
+      endTime: newTask.value.endTime,
+      priority: newTask.value.priority,
+      tags: newTask.value.tags,
+      state: 0,
+      startTime: newTask.value.startTime,
+      subTasks: newTask.value.subTasks,
+      repeat: "false",
+    });
     const date = new Date(newTask.value.startTime);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -432,16 +537,7 @@ const createTask = () => {
       .catch((err) => {
         console.log(err);
       });
-    taskList.value.push({
-      description: newTask.value.description,
-      endTime: newTask.value.endTime,
-      priority: newTask.value.priority,
-      tags: newTask.value.tags,
-      state: 0,
-      startTime: "",
-      subTasks: newTask.value.subTasks,
-      repeat: "false",
-    });
+
     // 重置表单
     newTask.value = {
       id: "",
@@ -475,16 +571,6 @@ const createTask = () => {
         newTask.value.subTasks.forEach((item) => {
           console.log(item.endTime);
         });
-        taskList.value.push({
-          description: newTask.value.description,
-          endTime: newTask.value.endTime,
-          priority: newTask.value.priority,
-          tags: newTask.value.tags,
-          state: 0,
-          startTime: newTask.value.startTime,
-          subTasks: newTask.value.subTasks,
-          repeat: newTask.value.repeat,
-        });
         centerDialogVisible.value = true;
         ElMessage.success("创建任务成功");
       })
@@ -493,6 +579,8 @@ const createTask = () => {
       });
   }
 };
+const yesterDatyStudyTime = ref(0);
+const todayStudyTime = ref(0);
 // 添加大任务
 const commitTask = () => {
   addBigTask1(
@@ -505,24 +593,64 @@ const commitTask = () => {
     }
   ).then((res) => {
     console.log(res.data);
+    // 重置表单
+    newTask.value = {
+      id: "",
+      description: "",
+      startTime: "",
+      endTime: "",
+      priority: "",
+      tags: [],
+      subTasks: [],
+      repeat: "false",
+    };
   });
-
+  taskList.value.length = 0;
+  // 重新获取
+  getTasksInfo().then((res) => {
+    if (res.data.data) {
+      res.data.data.forEach((item) => {
+        taskList.value.push(item);
+      });
+      taskList.value = taskList.value.sort((a, b) => {
+        const dateA = new Date(a.startTime).getTime(); // 获取时间戳
+        const dateB = new Date(b.startTime).getTime(); // 获取时间戳
+        return dateA - dateB;
+      });
+    }
+  });
   centerDialogVisible.value = false;
 };
-onMounted(() => {
+onBeforeMount(() => {
   healthyState.value = getHealthyState(healthy.point);
-  getTasksInfo().then((res) => {
-    console.log(res.data);
-    res.data.data.forEach((item) => {
-      item.startTime = formatDate(item.startTime);
-      item.endTime = formatDate(item.endTime);
-      taskList.value.push(item);
+  getWeekStudyTime()
+    .then((res) => {
+      todayStudyTime.value = parseFloat((res.data.data[0].totalDuration / 60).toFixed(1));
+      yesterDatyStudyTime.value = parseFloat((res.data.data[1].totalDuration / 60).toFixed(1));
+    })
+    .catch((err) => {
+      console.log(err);
     });
+  getTasksInfo().then((res) => {
+    if (res.data.data) {
+      res.data.data.forEach((item) => {
+        taskList.value.push(item);
+      });
+      taskList.value = taskList.value.sort((a, b) => {
+        const dateA = new Date(a.startTime).getTime(); // 获取时间戳
+        const dateB = new Date(b.startTime).getTime(); // 获取时间戳
+        return dateA - dateB;
+      });
+    }
   });
 });
 </script>
 
 <style scoped>
+/* 分页样式调整 */
+:deep(.el-pagination) {
+  --el-pagination-bg-color: transparent;
+}
 .el-input :deep(.el-input__wrapper) {
   box-shadow: 0 0 0 1px #e5e7eb;
 }
@@ -536,31 +664,40 @@ onMounted(() => {
   cursor: pointer;
 }
 
-/* 加载动画样式 */
-.loading-animation {
+.fullscreen-loading {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(255, 255, 255, 0.95);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   z-index: 9999;
 }
 
-.spinner {
+.loading-spinner {
   width: 50px;
   height: 50px;
-  border: 5px solid rgba(255, 255, 255, 0.3);
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #409eff;
   border-radius: 50%;
-  border-top-color: #fff;
-  animation: spin 1s ease-in-out infinite;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  margin-top: 16px;
+  color: #606266;
+  font-size: 14px;
 }
 
 @keyframes spin {
-  to {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
     transform: rotate(360deg);
   }
 }
