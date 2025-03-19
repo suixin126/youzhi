@@ -24,9 +24,7 @@
         <div class="bg-white rounded-lg p-6 shadow-sm">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-medium text-gray-900">学习时长</h3>
-            <span class="text-3xl font-semibold text-emerald-500"
-              >{{ workTime }}h</span
-            >
+            <span class="text-3xl font-semibold text-emerald-500">{{ workTime }}h</span>
           </div>
           <div class="flex items-center text-emerald-500">
             <el-icon v-if="workTimeDiff >= 0">
@@ -35,12 +33,8 @@
             <el-icon v-else color="red">
               <ArrowDown />
             </el-icon>
-            <span class="ml-1 text-green-600" v-if="workTimeDiff >= 0"
-              >较昨日增加 {{ workTimeDiff }}h</span
-            >
-            <span class="ml-1 text-red-600" v-else
-              >较昨日减少{{ -workTimeDiff }}h</span
-            >
+            <span class="ml-1 text-green-600" v-if="workTimeDiff >= 0">较昨日增加 {{ workTimeDiff }}h</span>
+            <span class="ml-1 text-red-600" v-else>较昨日减少{{ -workTimeDiff }}h</span>
           </div>
         </div>
 
@@ -85,23 +79,12 @@
           </div>
 
           <!-- 健康建议区域 -->
-          <div
-            class="bg-white rounded-lg p-6 shadow-sm"
-            v-loading="adviceExist"
-          >
+          <div class="bg-white rounded-lg p-6 shadow-sm" v-loading="adviceExist">
             <h3 class="text-lg font-medium text-gray-900 mb-6">
-              健康建议<span
-                style="font-size: small; margin-left: 10px; color: red"
-                >(建议由AI生成，仅供参考)</span
-              >
+              健康建议<span style="font-size: small; margin-left: 10px; color: red">(建议由AI生成，仅供参考)</span>
             </h3>
             <div class="space-y-4">
-              <div
-                class="rounded-lg p-4"
-                :class="getColorClass(index)"
-                v-for="(items, index) in advice"
-                :key="index"
-              >
+              <div class="rounded-lg p-4" :class="getColorClass(index)" v-for="(items, index) in advice" :key="index">
                 <h4 class="font-medium mb-2" :class="getTitleColorClass(index)">
                   {{ items.title }}
                 </h4>
@@ -120,35 +103,20 @@
               <h3 class="text-lg font-medium text-gray-900">健康数据导入</h3>
               <div class="import" @click="showImportDialog = true"></div>
             </div>
+            <div style="font-size: small;font-weight: lighter;position: relative;left: -10px;" class="text-red-600">
+              （目前仅支持苹果健康的数据导入）</div>
             <!-- 健康数据导入弹窗,选择文件进行上传 -->
-            <el-dialog
-              v-model="showImportDialog"
-              title="健康数据导入"
-              width="40%"
-            >
+            <el-dialog v-model="showImportDialog" title="健康数据导入" width="40%">
               <div v-loading="uploading">
-                <el-upload
-                  class="upload-demo"
-                  drag
-                  action="#"
-                  :multiple="false"
-                  :auto-upload="false"
-                  :limit="1"
-                  @change="handleFileChange"
-                >
+                <el-upload class="upload-demo" drag action="#" :multiple="false" :auto-upload="false" :limit="1"
+                  accept=".xml" @change="handleFileChange">
                   <el-icon class="el-icon--upload"><upload-filled /></el-icon>
                   <div class="el-upload__text">
                     拖拽或者 <em>选择文件进行上传</em>
                   </div>
                 </el-upload>
-                <el-button
-                  size="medium"
-                  type="primary"
-                  @click="submitUpload"
-                  v-show="showBtn"
-                  style="margin: 0 auto"
-                  >导入</el-button
-                >
+                <el-button size="medium" type="primary" @click="submitUpload" v-show="showBtn"
+                  style="margin: 0 auto">导入</el-button>
               </div>
             </el-dialog>
           </div>
@@ -159,32 +127,20 @@
               <div class="edit" @click="showTargetDialog = true"></div>
             </div>
             <!-- 健康目标弹窗 -->
-            <el-dialog
-              v-model="showTargetDialog"
-              title="编辑健康目标"
-              width="40%"
-            >
+            <el-dialog v-model="showTargetDialog" title="编辑健康目标" width="40%">
               <el-form :model="targets" ref="targetForm" label-width="75px">
                 <el-form-item label="每日步数">
-                  <el-input
-                    v-model="targets.totalFoot"
-                    placeholder="请输入每日步数"
-                  />
+                  <el-input v-model="targets.totalFoot" placeholder="请输入每日步数" />
                 </el-form-item>
                 <el-form-item label="睡眠时长">
-                  <el-input
-                    v-model="targets.totalSleepTime"
-                    placeholder="请输入睡眠时长"
-                  />
+                  <el-input v-model="targets.totalSleepTime" placeholder="请输入睡眠时长" />
                 </el-form-item>
               </el-form>
-              <div
-                style="
+              <div style="
                   display: flex;
                   justify-content: space-between;
                   width: 100%;
-                "
-              >
+                ">
                 <el-button @click="showTargetDialog = false">取消</el-button>
                 <el-button type="primary" @click="saveTarget()">保存</el-button>
               </div>
@@ -196,10 +152,7 @@
                   <span class="text-blue-500">{{ footRatio * 100 }}%</span>
                 </div>
                 <div class="h-2 bg-gray-200 rounded-full">
-                  <div
-                    class="h-2 bg-blue-500 rounded-full"
-                    :style="{ width: footRatio * 100 + '%' }"
-                  ></div>
+                  <div class="h-2 bg-blue-500 rounded-full" :style="{ width: footRatio * 100 + '%' }"></div>
                 </div>
               </div>
               <div>
@@ -208,10 +161,7 @@
                   <span class="text-purple-500">{{ sleepRatio * 100 }}%</span>
                 </div>
                 <div class="h-2 bg-gray-200 rounded-full">
-                  <div
-                    class="h-2 bg-purple-500 rounded-full"
-                    :style="{ width: sleepRatio * 100 + '%' }"
-                  ></div>
+                  <div class="h-2 bg-purple-500 rounded-full" :style="{ width: sleepRatio * 100 + '%' }"></div>
                 </div>
               </div>
             </div>
@@ -219,11 +169,7 @@
           <div class="bg-white rounded-lg p-6 shadow-sm relative">
             <div class="flex justify-between items-center mb-6">
               <h3 class="text-lg font-medium text-gray-900">健康记录</h3>
-              <el-button
-                size="small"
-                @click="showHealthDialog = true"
-                class="!rounded-button"
-              >
+              <el-button size="small" @click="showHealthDialog = true" class="!rounded-button">
                 查询近30天
               </el-button>
             </div>
@@ -231,23 +177,13 @@
               <!-- 今日数据展示-->
               <div class="items-center">
                 <!-- 近三天的健康数据 -->
-                <div
-                  v-for="(day, index) in threeDaysData"
-                  :key="index"
-                  class="bg-white rounded-lg p-4 shadow-sm"
-                >
+                <div v-for="(day, index) in threeDaysData" :key="index" class="bg-white rounded-lg p-4 shadow-sm">
                   <div v-show="index === 0" class="flex justify-between">
                     <div class="text-sm text-red-500 mb-2">{{ day.date }}</div>
-                    <div
-                      v-if="currentDataType === 0"
-                      class="text-sm font-medium text-green-600"
-                    >
+                    <div v-if="currentDataType === 0" class="text-sm font-medium text-green-600">
                       心率: {{ day.heartRate }} bpm
                     </div>
-                    <div
-                      v-else-if="currentDataType === 1"
-                      class="text-sm font-medium text-blue-600"
-                    >
+                    <div v-else-if="currentDataType === 1" class="text-sm font-medium text-blue-600">
                       步数: {{ day.stepCount }} 步
                     </div>
                     <div v-else class="text-sm font-medium text-purple-600">
@@ -258,16 +194,10 @@
                     <div class="text-sm text-orange-500 mb-2">
                       {{ day.date }}
                     </div>
-                    <div
-                      v-if="currentDataType === 1"
-                      class="text-sm font-medium text-green-600"
-                    >
+                    <div v-if="currentDataType === 1" class="text-sm font-medium text-green-600">
                       心率: {{ day.heartRate }} bpm
                     </div>
-                    <div
-                      v-else-if="currentDataType === 2"
-                      class="text-sm font-medium text-blue-600"
-                    >
+                    <div v-else-if="currentDataType === 2" class="text-sm font-medium text-blue-600">
                       步数: {{ day.stepCount }} 步
                     </div>
                     <div v-else class="text-sm font-medium text-purple-600">
@@ -278,16 +208,10 @@
                     <div class="text-sm text-yellow-500 mb-2">
                       {{ day.date }}
                     </div>
-                    <div
-                      v-if="currentDataType === 2"
-                      class="text-sm font-medium text-green-600"
-                    >
+                    <div v-if="currentDataType === 2" class="text-sm font-medium text-green-600">
                       心率: {{ day.heartRate }} bpm
                     </div>
-                    <div
-                      v-else-if="currentDataType === 0"
-                      class="text-sm font-medium text-blue-600"
-                    >
+                    <div v-else-if="currentDataType === 0" class="text-sm font-medium text-blue-600">
                       步数: {{ day.stepCount }} 步
                     </div>
                     <div v-else class="text-sm font-medium text-purple-600">
@@ -298,11 +222,7 @@
               </div>
             </div>
             <!-- 健康数据弹窗 -->
-            <el-dialog
-              v-model="showHealthDialog"
-              title="近30天健康数据"
-              width="40vw"
-            >
+            <el-dialog v-model="showHealthDialog" title="近30天健康数据" width="40vw">
               <el-table :data="healthData" style="width: 100%" max-height="400">
                 <el-table-column prop="date" label="日期" width="150" />
                 <el-table-column label="步数" width="120">
@@ -335,7 +255,7 @@ import { onMounted, ref, onUnmounted } from "vue";
 import { ElMessage } from "element-plus";
 import { getHealthData, getHealthDataList, getHealthSuggestion, getTasksInfo, getWeekStudyTime } from "@/api/api.js";
 import { ArrowDown, ArrowUp } from "@element-plus/icons-vue";
-import {calculateHealthPoint} from '@/utils/healthyMethods.js'
+import { calculateHealthPoint } from '@/utils/healthyMethods.js'
 const tasks = ref([]);
 //当天的健康数据
 const healthy = ref({
@@ -370,7 +290,7 @@ const showHealthDialog = ref(false);
 const showImportDialog = ref(false);
 const showTargetDialog = ref(false);
 const showBtn = ref(false);
-const adviceExist = ref(true);
+const adviceExist = ref(false);
 const uploading = ref(false);
 const currentDataType = ref(0); // 当前展示的数据类型（0: sportTime, 1: footNum, 2: sleepTime）
 // 健康数据切换定时器
@@ -381,16 +301,16 @@ onMounted(() => {
   targets.value = JSON.parse(localStorage.getItem("targets"));
   //获取健康数据(30天)
   getHealthDataList().then((res) => {
-    if(res.data.data){
+    if (res.data.data) {
       //根据时间排序
-    res.data.data.sort((a, b) => {
-      return new Date(b.date) - new Date(a.date);
-    });
-    //获取最近3天的健康数据
-    for (let i = 0; i < 3; i++) {
-      threeDaysData.value.push(res.data.data[i]);
-    }
-    healthData.value = res.data.data;
+      res.data.data.sort((a, b) => {
+        return new Date(b.date) - new Date(a.date);
+      });
+      //获取最近3天的健康数据
+      for (let i = 0; i < 3; i++) {
+        threeDaysData.value.push(res.data.data[i]);
+      }
+      healthData.value = res.data.data;
     }
   }).catch((err) => {
     console.log(err);
@@ -398,7 +318,11 @@ onMounted(() => {
   //获取今日的健康数据
   getHealthData().then((res) => {
     if (res.data.data == null) {
-      ElMessage.error(res.data.message);
+      //只提醒一次
+      if (localStorage.getItem("message") == null) {
+        localStorage.setItem("message", "true");
+        ElMessage.error(res.data.message);
+      }
       return;
     }
     //初始化用户今日健康数据
@@ -408,28 +332,30 @@ onMounted(() => {
     //计算目标进度
     calculateProgress();
     //计算健康指数
-    calculateHealthPoint(healthy,healthyState);
+    calculateHealthPoint(healthy, healthyState);
+    //如果本地仓库有健康建议，直接获取
+    if (localStorage.getItem("advice")) {
+      advice.value = JSON.parse(localStorage.getItem("advice"));
+      adviceExist.value = false;
+    }
+    else {
+      adviceExist.value = true;
+      //如果本地仓库没有建议，获取健康建议
+      getHealthSuggestion().then((res) => {
+        console.log(res.data.message);
+        //提取健康建议
+        localStorage.setItem("advice", JSON.stringify(extractSectionsWithoutFormat(res.data.message)));
+        advice.value = extractSectionsWithoutFormat(res.data.message);
+        console.log(advice.value);
+        adviceExist.value = false;
+      }).catch((err) => {
+        console.log(err);
+      })
+    }
   }).catch((err) => {
     console.log(err);
   })
-  //如果本地仓库有健康建议，直接获取
-  if (localStorage.getItem("advice")) {
-    advice.value = JSON.parse(localStorage.getItem("advice"));
-    adviceExist.value = false;
-  }
-  else {
-    //如果本地仓库没有建议，获取健康建议
-    getHealthSuggestion().then((res) => {
-      console.log(res.data.message);
-      //提取健康建议
-      localStorage.setItem("advice", JSON.stringify(extractSectionsWithoutFormat(res.data.message)));
-      advice.value = extractSectionsWithoutFormat(res.data.message);
-      console.log(advice.value);
-      adviceExist.value = false;
-    }).catch((err) => {
-      console.log(err);
-    })
-  }
+
   //获取任务信息
   getTasksInfo().then((res) => {
     tasks.value = res.data.data;
@@ -439,10 +365,10 @@ onMounted(() => {
   })
   //获取工作时间
   getWeekStudyTime().then((res) => {
-    if(res.data.data.length !== 0){
+    if (res.data.data.length !== 0) {
       //转换成小时
-    workTime.value = Math.round(res.data.data[0].totalDuration / 60 * 10) / 10;
-    workTimeDiff.value = Math.round((res.data.data[0].totalDuration - res.data.data[1].totalDuration) / 60 * 10) / 10;
+      workTime.value = Math.round(res.data.data[0].totalDuration / 60 * 10) / 10;
+      workTimeDiff.value = Math.round((res.data.data[0].totalDuration - res.data.data[1].totalDuration) / 60 * 10) / 10;
     }
   })
   // 启动健康数据切换定时器

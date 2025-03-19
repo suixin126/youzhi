@@ -8,18 +8,8 @@
           <h2 class="text-xl font-medium mb-8">个人信息</h2>
           <div class="flex flex-col items-center mb-8">
             <el-avatar :size="120" :src="userInfo.avatar" />
-            <el-button
-              class="mt-4 rounded-md"
-              type="primary"
-              @click="changeAvatar()"
-              >更换头像</el-button
-            >
-            <input
-              ref="avatarInputRef"
-              type="file"
-              accept="image/*"
-              style="display: none"
-            />
+            <el-button class="mt-4 rounded-md" type="primary" @click="changeAvatar()">更换头像</el-button>
+            <input ref="avatarInputRef" type="file" accept="image/*" style="display: none" />
           </div>
 
           <div class="grid grid-cols-2 gap-6">
@@ -69,46 +59,19 @@
                   上次修改时间：{{ formatDate(updatePwdTime) }}
                 </div>
               </div>
-              <el-button
-                type="primary"
-                class="rounded-md whitespace-nowrap"
-                @click="changePassword()"
-                >修改</el-button
-              >
-              <el-dialog
-                v-model="centerDialogVisible"
-                title="密码修改"
-                width="500"
-                destroy-on-close
-                center
-                align-center
-              >
+              <el-button type="primary" class="rounded-md whitespace-nowrap" @click="changePassword()">修改</el-button>
+              <el-dialog v-model="centerDialogVisible" title="密码修改" width="500" destroy-on-close center align-center>
                 <div>
                   <span style="margin-right: 12px"> 旧密码： </span>
-                  <el-input
-                    v-model="password1"
-                    type="password"
-                    placeholder="请输入"
-                    show-password
-                  />
+                  <el-input v-model="password1" type="password" placeholder="请输入" show-password />
                 </div>
                 <div>
                   <span style="margin-right: 12px"> 新密码： </span>
-                  <el-input
-                    v-model="password2"
-                    type="password"
-                    placeholder="请输入"
-                    show-password
-                  />
+                  <el-input v-model="password2" type="password" placeholder="请输入" show-password />
                 </div>
                 <div>
                   <span> 确认密码： </span>
-                  <el-input
-                    v-model="password3"
-                    type="password"
-                    placeholder="请输入"
-                    show-password
-                  />
+                  <el-input v-model="password3" type="password" placeholder="请输入" show-password />
                 </div>
                 <template #footer>
                   <div class="dialog-footer">
@@ -132,12 +95,7 @@
                 <div class="text-gray-700 mb-1">退出登录</div>
                 <div class="text-gray-500 text-sm">安全退出当前登录账号</div>
               </div>
-              <el-button
-                type="danger"
-                class="rounded-md whitespace-nowrap"
-                @click="exit()"
-                >退出登录</el-button
-              >
+              <el-button type="danger" class="rounded-md whitespace-nowrap" @click="exit()">退出登录</el-button>
             </div>
           </div>
         </div>
@@ -260,8 +218,11 @@ const exit = () => {
           if (localStorage.getItem("advice")) {
             localStorage.removeItem("advice");
           }
-          if(localStorage.getItem("isLoading") === 'false'){
+          if (localStorage.getItem("isLoading") === 'false') {
             localStorage.removeItem("isLoading");
+          }
+          if (localStorage.getItem("message")) {
+            localStorage.removeItem("message");
           }
           router.push("/login");
         })
@@ -269,7 +230,7 @@ const exit = () => {
           console.log(err);
         });
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 //页面初始化
 onMounted(() => {
