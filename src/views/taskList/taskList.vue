@@ -625,8 +625,12 @@ onBeforeMount(() => {
   healthyState.value = getHealthyState(healthy.point);
   getWeekStudyTime()
     .then((res) => {
-      todayStudyTime.value = parseFloat((res.data.data[0].totalDuration / 60).toFixed(1));
-      yesterDatyStudyTime.value = parseFloat((res.data.data[1].totalDuration / 60).toFixed(1));
+      todayStudyTime.value = parseFloat(
+        (res.data.data[0].totalDuration / 60).toFixed(1)
+      );
+      yesterDatyStudyTime.value = parseFloat(
+        (res.data.data[1].totalDuration / 60).toFixed(1)
+      );
     })
     .catch((err) => {
       console.log(err);

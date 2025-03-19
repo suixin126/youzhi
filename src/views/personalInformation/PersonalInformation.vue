@@ -152,7 +152,7 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from "vue";
 import userStore from "@/store/user.js";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { getUserInfo } from "@/api/api.js";
 import { updatePassword } from "@/api/api.js";
 import { logout } from "@/api/api.js";
@@ -247,18 +247,26 @@ const save = () => {
 };
 //退出登录
 const exit = () => {
-  logout()
-    .then((res) => {
-      console.log(res);
-      ElMessage.success({
-        message: "退出成功",
-      });
-      localStorage.removeItem("token");
-      router.push("/login");
+  ElMessageBox.confirm("确定退出登录?", "Warning", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(() => {
+      logout()
+        .then((res) => {
+          console.log(res);
+          ElMessage.success({
+            message: "退出成功",
+          });
+          localStorage.removeItem("token");
+          router.push("/login");
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     })
-    .catch((err) => {
-      console.log(err);
-    });
+    .catch(() => {});
 };
 //页面初始化
 onMounted(() => {

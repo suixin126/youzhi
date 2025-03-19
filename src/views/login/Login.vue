@@ -88,13 +88,25 @@
           <div class="text-center text-gray-500">或通过以下方式登录</div>
 
           <div class="flex justify-center space-x-6">
-            <el-button class="!rounded-button social-btn">
+            <el-button
+              @click="handleUnfinishedFeature()"
+              class="!rounded-button social-btn"
+              :disabled="isProcessing"
+            >
               <el-icon><i class="iconfont icon-weixin"></i></el-icon>
             </el-button>
-            <el-button class="!rounded-button social-btn">
+            <el-button
+              @click="handleUnfinishedFeature()"
+              class="!rounded-button social-btn"
+              :disabled="isProcessing"
+            >
               <el-icon><i class="iconfont icon-QQ"></i></el-icon>
             </el-button>
-            <el-button class="!rounded-button social-btn">
+            <el-button
+              @click="handleUnfinishedFeature()"
+              class="!rounded-button social-btn"
+              :disabled="isProcessing"
+            >
               <el-icon><i class="iconfont icon-weibo"></i></el-icon>
             </el-button>
           </div>
@@ -116,9 +128,37 @@
 <script setup>
 import { ref, reactive, onBeforeMount } from "vue";
 import { login } from "@/api/api.js";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElNotification } from "element-plus";
 import { useRouter } from "vue-router";
 const router = useRouter();
+const isProcessing = ref(false);
+
+const handleUnfinishedFeature = () => {
+  isProcessing.value = true;
+
+  ElNotification({
+    title: "第三方登录功能开发进行时 🚧",
+    message: "持续努力，敬请期待！",
+    type: "warning",
+    duration: 4500,
+    offset: 60,
+    customClass: "unfinished-notification",
+    icon: () =>
+      h(
+        // 使用 Element Plus 的 h 函数
+        "i",
+        { class: "iconfont icon-construction text-xl text-amber-600" }
+      ),
+    onClick: () => {
+      window.open("/roadmap", "_blank");
+    },
+  });
+
+  // 防止重复点击
+  setTimeout(() => {
+    isProcessing.value = false;
+  }, 3000);
+};
 
 const showPassword = ref(false);
 

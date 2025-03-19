@@ -31,7 +31,15 @@
             >
           </div>
           <div class="flex items-center text-gray-600">
-            <el-icon class="mr-2"><ArrowUp /></el-icon>
+            <el-icon
+              v-if="todayStudyTime - yesterDatyStudyTime > 0"
+              class="mr-2"
+            >
+              <ArrowUp />
+            </el-icon>
+            <el-icon v-else class="mr-2">
+              <ArrowDown />
+            </el-icon>
             <span
               >较昨日{{
                 todayStudyTime - yesterDatyStudyTime > 0 ? "增加" : "减少"
@@ -122,7 +130,7 @@
                 </div>
                 <div style="text-align: center; line-height: 50px">
                   <el-button
-                    :type="item.status === 1 ? 'success' : 'info'"
+                    :type="item.status === 1 ? 'success' : 'danger'"
                     class="!rounded-button"
                     @click="changeStatus(item)"
                     >{{ item.status !== 1 ? "未完成" : "已完成" }}</el-button
@@ -318,8 +326,8 @@
           <el-table-column prop="status" label="状态">
             <template #default="{ row }">
               <el-button
-                @click="changeStatus(row)"
-                :type="row.status === 1 ? 'success' : 'info'"
+                @click="BenDichangeStatus(row)"
+                :type="row.status === 1 ? 'success' : 'danger'"
                 >{{ row.status === 1 ? "已完成" : "未完成" }}</el-button
               >
             </template>
@@ -424,7 +432,7 @@
             <template #default="{ row }">
               <el-button
                 @click="BenDichangeStatus(row)"
-                :type="row.status === 1 ? 'success' : 'info'"
+                :type="row.status === 1 ? 'success' : 'danger'"
                 >{{ row.status === 1 ? "已完成" : "未完成" }}</el-button
               >
             </template>
@@ -466,6 +474,7 @@ import {
   updateTaskInfo,
   getWeekStudyTime,
 } from "@/api/api.js";
+import { ArrowDown } from "@element-plus/icons-vue";
 // 全屏动画加载
 const isLoading = ref(true);
 // 当前页数
@@ -808,7 +817,7 @@ const loadAllData = async () => {
     });
   getWeekStudyTime()
     .then((res) => {
-      console.log(res.data.data)
+      console.log(res.data.data);
       todayStudyTime.value = parseFloat(
         (res.data.data[0].totalDuration / 60).toFixed(1)
       );
@@ -824,9 +833,7 @@ const loadAllData = async () => {
 onBeforeMount(async () => {
   try {
     // 同时等待：1.所有数据加载 2.至少2秒时长
-    await Promise.all([
-      loadAllData(),
-    ]);
+    await Promise.all([loadAllData()]);
   } catch (error) {
     ElMessage.error(`数据加载失败: ${error.message}`);
   } finally {

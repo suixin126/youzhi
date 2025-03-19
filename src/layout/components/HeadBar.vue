@@ -153,15 +153,10 @@
 </template>
 
 <script setup>
-import { reactive, ref,computed } from "vue";
+import { reactive, ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import userStore from "@/store/user.js";
-import {
-  searchTask,
-  updateStatus,
-  deleteTask,
-  updateTaskInfo,
-} from "@/api/api.js";
+import { searchTask, deleteTask, updateTaskInfo } from "@/api/api.js";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { onClickOutside } from "@vueuse/core";
 const currentPage = ref(1);
