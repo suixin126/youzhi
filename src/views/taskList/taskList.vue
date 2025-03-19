@@ -39,7 +39,7 @@
               <el-table-column width="55">
                 <template #default="{ row }">
                   <div class="check-box" @click="toggleCheck(row)">
-                    {{ row.state ? "✓" : "□" }}
+                    {{ row.status === 1 ? "✓" : "□" }}
                   </div>
                 </template>
               </el-table-column>
@@ -50,6 +50,13 @@
                   <el-tag :type="getPriorityType(row.priority)" size="small">
                     {{ row.priority }}
                   </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="100">
+                <template #default="{ row }">
+                  <el-button type="danger" @click="deleteSTask(row)"
+                    >删除</el-button
+                  >
                 </template>
               </el-table-column>
             </el-table>
@@ -185,14 +192,12 @@
                         v-model="subTask.startTime"
                         type="datetime"
                         placeholder="开始时间"
-                        value-format="yyyy-MM-dd HH:mm"
                         class="flex-1"
                       />
                       <el-date-picker
                         v-model="subTask.endTime"
                         type="datetime"
                         placeholder="截止时间"
-                        value-format="yyyy-MM-dd HH:mm"
                         class="flex-1"
                       />
                     </div>
@@ -219,10 +224,7 @@
                     <el-button @click="centerDialogVisible = false"
                       >取消</el-button
                     >
-                    <el-button
-                      type="primary"
-                      @click="centerDialogVisible = false"
-                    >
+                    <el-button type="primary" @click="commitTask()">
                       确认
                     </el-button>
                   </div>
@@ -250,14 +252,20 @@
 
 <script lang="ts" setup>
 import { onMounted, ref, computed, reactive } from "vue";
-import { ElMessage } from "element-plus";
-import { Microphone, Check, Close } from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
 import userStore from "@/store/user.js";
 import { getHealthyState } from "@/utils/healthy.js";
 import { formatDate } from "@/utils/formDate.js";
-import { getTasksInfo, addTask, addBigTask } from "@/api/api.js";
+import {
+  getTasksInfo,
+  addTask,
+  addBigTask,
+  updateStatus,
+  addBigTask1,
+  deleteTask,
+} from "@/api/api.js";
 
-const centerDialogVisible = ref(true);
+const centerDialogVisible = ref(false);
 const store = userStore();
 const { tasks, healthy } = store;
 // 使用 computed 创建响应式计算属性
@@ -270,9 +278,6 @@ const taskList = ref([]);
 const finishedTasks = computed(() =>
   taskList.value.filter((task) => task.status === 1)
 );
-interface SubTask {
-  name: string;
-}
 const addSubTask = () => {
   console.log(666);
   newTask.value.subTasks.push({
@@ -290,6 +295,7 @@ const removeSubTask = (index) => {
 const taskType = ref("small");
 // 新任务
 const newTask = ref({
+  id: "",
   description: "",
   startTime: "",
   endTime: "",
@@ -310,11 +316,61 @@ const getPriorityType = (priority) => {
   };
   return types[priority] || "info";
 };
+const deleteSTask = (row) => {
+  ElMessageBox.confirm("确认删除?", "Warning", {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(() => {
+      // 找到任务在数组中的索引
+      const index = taskList.value.findIndex((item) => item.id === row.id);
+      if (index !== -1) {
+        deleteTask(
+          {
+            taskId: row.id,
+          },
+          {
+            "Content-Type": "application/json",
+          }
+        ).then((res) => {
+          console.log(res.data);
+        });
 
+        // 删除任务
+        taskList.value.splice(index, 1);
+        ElMessage({
+          type: "success",
+          message: "Delete completed",
+        });
+      }
+    })
+    .catch(() => {
+      ElMessage({
+        type: "info",
+        message: "Delete canceled",
+      });
+    });
+};
 const isLuZhi = ref(false);
 // 任务状态切换
 const toggleCheck = (row) => {
-  row.state = !row.state;
+  if(row.status === 1){
+    row.status = 0;
+  }else {
+    row.status = 1;
+  }
+  updateStatus(
+    {
+      taskId: parseInt(row.id),
+      status: parseInt(row.status),
+    },
+    {
+      "Content-Type": "application/json",
+    }
+  ).then((res) => {
+    console.log(res.data);
+  });
 };
 const isLoading = ref(false);
 // 创建任务
@@ -388,6 +444,7 @@ const createTask = () => {
     });
     // 重置表单
     newTask.value = {
+      id: "",
       description: "",
       startTime: "",
       endTime: "",
@@ -435,6 +492,22 @@ const createTask = () => {
         console.log(err);
       });
   }
+};
+// 添加大任务
+const commitTask = () => {
+  addBigTask1(
+    {
+      main_task: newTask.value.description,
+      sub_tasks: newTask.value.subTasks,
+    },
+    {
+      "Content-Type": "application/json",
+    }
+  ).then((res) => {
+    console.log(res.data);
+  });
+
+  centerDialogVisible.value = false;
 };
 onMounted(() => {
   healthyState.value = getHealthyState(healthy.point);

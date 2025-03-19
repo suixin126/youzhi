@@ -162,7 +162,12 @@ const handleRegister = () => {
     console.log(err)
   })
   register(
-    { name: form.username, password: form.password },
+    {
+      name: form.username,
+      password: form.password,
+      telephone: form.phone,
+      email: form.email,
+    },
     {
       "Content-Type": "application/json",
     }

@@ -1,5 +1,4 @@
 import http from '../http/http.js'
-import request from '../request/request.js'
 
 // 登录
 export const login = (params, headers) => {
@@ -67,4 +66,20 @@ export const getHealthDataList = (params) => {
 //获取健康建议
 export const getHealthSuggestion = (params) => {
     return http.get("/HealthData/healthAdvice", params);
+}
+// 添加大任务
+export const addBigTask1 = (params, headers) => {
+    return http.post("/task/addPlanedTasks", params, headers);
+}
+// 修改状态
+export const updateStatus = (params, headers) => {
+    return http.post("/task/update/status", params, headers)
+}
+// 查询某日的任务情况
+export const getRandomTask = (params) => {
+    return http.get(`/task/getOneDay?date=${params.date}`);
+}
+// 删除任务
+export const deleteTask = (params, headers) => {
+    return http.post('/task/delete', params, headers);
 }

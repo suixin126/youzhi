@@ -102,6 +102,11 @@ const form = reactive({
   remember: false,
 });
 
+const targets = {
+  totalFoot: 10000, // 总步数
+  totalSleepTime: 8, // 总睡眠时长
+}
+
 const heroImage =
   "https://ai-public.mastergo.com/ai/img_res/97e40bc1810d1014704b2b4144f7c143.jpg";
 
@@ -125,6 +130,8 @@ const handleLogin = () => {
       ElMessage.success("登录成功");
       // 设置token
       localStorage.setItem("token", res.data.data.token);
+      //初始化用户健康目标
+      localStorage.setItem("targets", JSON.stringify(targets));
       router.push("/");
     } else {
       ElMessage.error(res.data.message);
