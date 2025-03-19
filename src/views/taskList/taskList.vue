@@ -93,14 +93,11 @@
               </el-button>
             </div>
 
-
             <div class="space-y-4">
               <div>
                 <el-radio-group v-model="taskType" class="mb-4">
                   <el-radio-button value="small">小任务</el-radio-button>
-                  <el-radio-button value="big"
-                    >大任务</el-radio-button
-                  >
+                  <el-radio-button value="big">大任务</el-radio-button>
                 </el-radio-group>
               </div>
 
@@ -268,7 +265,11 @@
               >
                 创建任务
               </el-button>
-              <div style="margin-bottom: 10px;font-size:small;color:#22c55e">注：大任务由AI智能分解</div>
+              <div
+                style="margin-bottom: 10px; font-size: small; color: #22c55e"
+              >
+                注：大任务由AI智能分解
+              </div>
             </div>
           </div>
         </div>
@@ -320,7 +321,7 @@ const isListening = ref(false);
 let recognition = null;
 
 // 初始化语音识别
-const initializeRecognition = () => {
+const initializeRecognition = async () => {
   const SpeechRecognition =
     (window as any).SpeechRecognition ||
     (window as any).webkitSpeechRecognition;
@@ -328,6 +329,17 @@ const initializeRecognition = () => {
   if (!SpeechRecognition) {
     console.error("当前浏览器不支持语音识别");
     return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: false,
+    });
+    stream.getTracks().forEach((track) => track.stop());
+  } catch (error) {
+    console.error("麦克风权限被拒绝或获取失败:", error);
+    return false;
   }
 
   recognition = new SpeechRecognition();
@@ -344,14 +356,20 @@ const initializeRecognition = () => {
   recognition.onerror = (event) => {
     console.error("语音识别错误:", event.error);
   };
+  return true;
 };
 
 // 切换录音状态
-const toggleRecording = () => {
+const toggleRecording = async () => {
   if (!recognition) return;
 
   if (!isListening.value) {
-    recognition.start();
+    const hasPermission = await initializeRecognition();
+    if (hasPermission) {
+      recognition.start();
+    } else {
+      alert("需要麦克风权限才能使用语音识别功能");
+    }
   } else {
     recognition.stop();
   }
@@ -479,6 +497,17 @@ const isLoading = ref(false);
 const formatDate = (date) => {
   return format(date, "hh:mm");
 };
+const formatT = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  // 获取小时、分钟和秒数，并进行补零操作
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  return formattedDate;
+};
 // 创建任务
 const createTask = () => {
   if (!newTask.value.description) {
@@ -498,24 +527,9 @@ const createTask = () => {
       repeat: "false",
     });
     const date = new Date(newTask.value.startTime);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    // 获取小时、分钟和秒数，并进行补零操作
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const seconds = String(date.getSeconds()).padStart(2, "0");
-    const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-
+    const formattedDate = formatT(date);
     const date1 = new Date(newTask.value.startTime);
-    const year1 = date1.getFullYear();
-    const month1 = String(date.getMonth() + 1).padStart(2, "0");
-    const day1 = String(date.getDate()).padStart(2, "0");
-    // 获取小时、分钟和秒数，并进行补零操作
-    const hours1 = String(date.getHours()).padStart(2, "0");
-    const minutes1 = String(date.getMinutes()).padStart(2, "0");
-    const seconds1 = String(date.getSeconds()).padStart(2, "0");
-    const formattedDate1 = `${year1}-${month1}-${day1}T${hours1}:${minutes1}:${seconds1}`;
+    const formattedDate1 = formatT(date1);
     newTask.value.endTime = formatDate(newTask.value.endTime);
     if (!newTask.value.endTime) {
       ElMessage.warning("请选择截止时间");
@@ -544,11 +558,23 @@ const createTask = () => {
     )
       .then((res) => {
         console.log(res);
+        taskList.value.length = 0;
+        getTasksInfo().then((res) => {
+          if (res.data.data) {
+            res.data.data.forEach((item) => {
+              taskList.value.push(item);
+            });
+            taskList.value = taskList.value.sort((a, b) => {
+              const dateA = new Date(a.startTime).getTime(); // 获取时间戳
+              const dateB = new Date(b.startTime).getTime(); // 获取时间戳
+              return dateA - dateB;
+            });
+          }
+        });
       })
       .catch((err) => {
         console.log(err);
       });
-
     // 重置表单
     newTask.value = {
       id: "",
@@ -579,6 +605,7 @@ const createTask = () => {
         res.data.data.sub_tasks.forEach((item) => {
           newTask.value.subTasks.push(item);
         });
+        console.log(newTask.value.subTasks);
         newTask.value.subTasks.forEach((item) => {
           console.log(item.endTime);
         });
@@ -592,8 +619,20 @@ const createTask = () => {
 };
 const yesterDatyStudyTime = ref(0);
 const todayStudyTime = ref(0);
+
 // 添加大任务
 const commitTask = () => {
+  newTask.value.subTasks.forEach((item) => {
+    console.log(item.endTime);
+    console.log(item.startTime);
+    if (!(typeof item.endTime === "string")) {
+      item.endTime = formatT(item.endTime);
+    }
+    if (!(typeof item.startTime === "string")) {
+      item.startTime = formatT(item.startTime);
+    }
+  });
+  console.log(newTask.value.subTasks);
   addBigTask1(
     {
       main_task: newTask.value.description,

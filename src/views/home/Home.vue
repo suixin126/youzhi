@@ -206,9 +206,14 @@
                 <!-- 总2万步 -->
                 <el-progress
                   :percentage="
-                    parseFloat(
-                      ((healthy.stepCount * 100) / targets.totalFoot).toFixed(1)
-                    )
+                    (healthy.stepCount * 100) / targets.totalFoot >= 100
+                      ? 100
+                      : parseFloat(
+                          (
+                            (healthy.stepCount * 100) /
+                            targets.totalFoot
+                          ).toFixed(1)
+                        )
                   "
                   color="#10B981"
                 />
@@ -222,12 +227,14 @@
                 <!-- 总8h -->
                 <el-progress
                   :percentage="
-                    parseFloat(
-                      (
-                        (healthy.sleepTime * 100) /
-                        targets.totalSleepTime
-                      ).toFixed(1)
-                    )
+                    (healthy.sleepTime * 100) / targets.totalSleepTime >= 100
+                      ? 100
+                      : parseFloat(
+                          (
+                            (healthy.sleepTime * 100) /
+                            targets.totalSleepTime
+                          ).toFixed(1)
+                        )
                   "
                   color="#F59E0B"
                 />
@@ -370,7 +377,8 @@
         width="60%"
         center
       >
-        <el-table :data="detailTask" style="width: 100%">
+        <!-- 将 detailTask 对象包装成数组 -->
+        <el-table :data="[detailTask]" style="width: 100%">
           <!-- 任务描述 -->
           <el-table-column prop="description" label="任务描述" width="300">
             <template #default="{ row }">
@@ -385,9 +393,11 @@
                 v-model="row.startTime"
                 type="datetime"
                 format="YYYY-MM-DD HH:mm"
+                value-format="YYYY-MM-DD HH:mm:ss"
               />
             </template>
           </el-table-column>
+
           <!-- 截止时间 -->
           <el-table-column prop="endTime" label="截止时间">
             <template #default="{ row }">
@@ -395,11 +405,14 @@
                 v-model="row.endTime"
                 type="datetime"
                 format="YYYY-MM-DD HH:mm"
+                value-format="YYYY-MM-DD HH:mm:ss"
               />
             </template>
           </el-table-column>
+
+          
         </el-table>
-        <el-table :data="detailTask" style="width: 100%">
+        <el-table :data="[detailTask]" style="width: 100%">
           <!-- 优先级 -->
           <el-table-column prop="priority" label="优先级" width="120">
             <template #default="{ row }">
@@ -426,16 +439,19 @@
               />
             </template>
           </el-table-column>
-          <!-- 是否完成 -->
+
+          <!-- 状态 -->
           <el-table-column prop="status" label="状态">
             <template #default="{ row }">
               <el-button
                 @click="BenDichangeStatus(row)"
                 :type="row.status === 1 ? 'success' : 'danger'"
-                >{{ row.status === 1 ? "已完成" : "未完成" }}</el-button
               >
+                {{ row.status === 1 ? "已完成" : "未完成" }}
+              </el-button>
             </template>
           </el-table-column>
+
           <!-- 操作列 -->
           <el-table-column label="操作" width="100">
             <template #default="{ row }">
@@ -448,10 +464,11 @@
             </template>
           </el-table-column>
         </el-table>
+
         <template #footer>
           <div class="dialog-footer">
             <el-button @click="cancelTask()">取消</el-button>
-            <el-button type="primary" @click="saveTask()"> 保存 </el-button>
+            <el-button type="primary" @click="saveTask()">保存</el-button>
           </div>
         </template>
       </el-dialog>
@@ -461,7 +478,6 @@
 
 <script lang="ts" setup>
 import { ref, reactive, watch, onBeforeMount, computed } from "vue";
-import userStore from "@/store/user.js";
 import { format } from "date-fns";
 import { ElMessageBox, type CalendarInstance, ElMessage } from "element-plus";
 import {
@@ -475,8 +491,8 @@ import {
 } from "@/api/api.js";
 import { ArrowDown } from "@element-plus/icons-vue";
 let targets = reactive({
-  totalFoot: 0,
-  totalSleepTime: 0,
+  totalFoot: 1,
+  totalSleepTime: 1,
 });
 import { calculateHealthPoint } from "@/utils/healthyMethods.js";
 // 全屏动画加载
@@ -546,7 +562,7 @@ const changeStatus = (item) => {
 // 任务详情取消
 const cancelTask = () => {
   detailVisible.value = false;
-  detailTask.length = 0;
+  detailTask = {};
   taskList.length = 0;
   // 重新获取任务
   getTasksInfo()
@@ -638,7 +654,7 @@ const handleTaskDelete = (row) => {
             currentTaskList.splice(index, 1);
           }
           detailVisible.value = false;
-          detailTask.length = 0;
+          detailTask = {};
         })
         .catch((err) => {
           ElMessage({
@@ -686,7 +702,7 @@ const saveTask = () => {
     type: "warning",
   })
     .then(() => {
-      updateTaskInfo(detailTask, {
+      updateTaskInfo([detailTask], {
         "Content-Type": "application/json",
       })
         .then((res) => {
@@ -696,7 +712,7 @@ const saveTask = () => {
             message: "修改成功",
           });
           detailVisible.value = false;
-          detailTask.length = 0;
+          detailTask = {};
         })
         .catch((err) => {
           console.log(err);
@@ -744,13 +760,13 @@ const taskList = reactive([]);
 // 当前选择的任务
 let currentTaskList = reactive([]);
 // 当前的详情任务
-let detailTask = reactive([]);
+let detailTask = reactive({});
 const value = ref(new Date());
 // 任务详情展示
 const detailVisible = ref(false);
 const showDetailDialog = (task) => {
   console.log(task);
-  detailTask.push(task);
+  detailTask = JSON.parse(JSON.stringify(task));
   detailVisible.value = true;
 };
 // 处理日历单元格点击事件
@@ -858,15 +874,21 @@ const loadAllData = async () => {
 };
 // 初始化加载
 onBeforeMount(async () => {
-  if(localStorage.getItem("isLoading")){
-    isLoading.value = localStorage.getItem("isLoading") === 'false' ? false : true
+  if (localStorage.getItem("isLoading")) {
+    isLoading.value =
+      localStorage.getItem("isLoading") === "false" ? false : true;
   }
-  targets = JSON.parse(localStorage.getItem("targets"));
+  if (localStorage.getItem("targets")) {
+    targets = JSON.parse(localStorage.getItem("targets"));
+  }
   try {
     // 同时等待：1.所有数据加载 2.至少1秒时长
-    await Promise.all([loadAllData(),setTimeout(()=>{
-      isLoading.value = false;
-    },1000)]);
+    await Promise.all([
+      loadAllData(),
+      setTimeout(() => {
+        isLoading.value = false;
+      }, 1000),
+    ]);
   } catch (error) {
     ElMessage.error(`数据加载失败: ${error.message}`);
   } finally {
