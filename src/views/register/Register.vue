@@ -203,8 +203,10 @@ import { ref, reactive, h, computed, shallowRef } from "vue";
 import { register } from "@/api/api.js";
 import { ElMessage, ElNotification } from "element-plus";
 import { userIsExist } from "@/api/api.js";
+import { useRouter } from "vue-router";
 import UserAgreement from "./components/UserAgreement.vue";
 import PrivacyPolicy from "./components/PrivacyPolicy.vue";
+const router = useRouter();
 const isProcessing = ref(false);
 const dialogVisible = ref(false);
 const agreementType = ref("user");
@@ -283,20 +285,28 @@ const handleRegister = () => {
         ElMessage.error("用户名已存在");
         form.username = "";
         return;
+      } else {
+        register(
+          {
+            name: form.username,
+            password: form.password,
+            telephone: form.phone,
+            email: form.email,
+          },
+          {
+            "Content-Type": "application/json",
+          }
+        )
+          .then((res) => {
+            console.log(res);
+
+            ElMessage.success("注册成功");
+            router.push("/login");
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       }
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-  register(
-    { name: form.username, password: form.password },
-    {
-      "Content-Type": "application/json",
-    }
-  )
-    .then((res) => {
-      console.log(res);
-      ElMessage.success("注册成功");
     })
     .catch((err) => {
       console.log(err);

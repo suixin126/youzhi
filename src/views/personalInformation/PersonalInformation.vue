@@ -27,10 +27,7 @@
               <div class="text-gray-500">用户名</div>
               <div class="text-gray-900">{{ userInformation.name }}</div>
             </div>
-            <div class="space-y-2">
-              <div class="text-gray-500">学号</div>
-              <div class="text-gray-900">{{ userInformation.id }}</div>
-            </div>
+
             <div class="space-y-2">
               <div class="text-gray-500">手机号码</div>
               <div class="text-gray-900">{{ userInformation.telephone }}</div>
@@ -260,6 +257,12 @@ const exit = () => {
             message: "退出成功",
           });
           localStorage.removeItem("token");
+          if (localStorage.getItem("advice")) {
+            localStorage.removeItem("advice");
+          }
+          if(localStorage.getItem("isLoading") === 'false'){
+            localStorage.removeItem("isLoading");
+          }
           router.push("/login");
         })
         .catch((err) => {

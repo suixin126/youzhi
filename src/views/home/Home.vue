@@ -1,6 +1,9 @@
-<!-- 代码已包含 CSS：使用 TailwindCSS , 安装 TailwindCSS 后方可看到布局样式效果 -->
-
 <template>
+  <!-- 全屏加载组件 -->
+  <div v-if="isLoading" class="fullscreen-loading">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">拼命加载中...</div>
+  </div>
   <div class="min-h-screen bg-gray-50">
     <!-- 主要内容区域 -->
     <div class="pt-4 pb-8 max-w-8xl mx-auto px-4">
@@ -198,28 +201,19 @@
               <div>
                 <div class="flex justify-between mb-2">
                   <span class="text-gray-600">今日步数</span>
-                  <span class="font-medium">{{ healthy.footNum }} 步</span>
+                  <span class="font-medium">{{ healthy.stepCount }} 步</span>
                 </div>
                 <!-- 总2万步 -->
                 <el-progress
-                  :percentage="parseFloat((healthy.footNum / 200).toFixed(1))"
+                  :percentage="
+                    parseFloat(
+                      ((healthy.stepCount * 100) / targets.totalFoot).toFixed(1)
+                    )
+                  "
                   color="#10B981"
                 />
               </div>
-              <div>
-                <div class="flex justify-between mb-2">
-                  <span class="text-gray-600">专注时长</span>
 
-                  <span class="font-medium">{{ healthy.studyTime }} 小时</span>
-                </div>
-                <!-- 总6小时 -->
-                <el-progress
-                  :percentage="
-                    parseFloat(((healthy.studyTime * 100) / 6).toFixed(1))
-                  "
-                  color="#3B82F6"
-                />
-              </div>
               <div>
                 <div class="flex justify-between mb-2">
                   <span class="text-gray-600">睡眠时长</span>
@@ -228,7 +222,12 @@
                 <!-- 总8h -->
                 <el-progress
                   :percentage="
-                    parseFloat(((healthy.sleepTime * 100) / 8).toFixed(1))
+                    parseFloat(
+                      (
+                        (healthy.sleepTime * 100) /
+                        targets.totalSleepTime
+                      ).toFixed(1)
+                    )
                   "
                   color="#F59E0B"
                 />
@@ -465,7 +464,6 @@ import { ref, reactive, watch, onBeforeMount, computed } from "vue";
 import userStore from "@/store/user.js";
 import { format } from "date-fns";
 import { ElMessageBox, type CalendarInstance, ElMessage } from "element-plus";
-import { getHealthyState } from "@/utils/healthy.js";
 import {
   getTasksInfo,
   getRandomTask,
@@ -473,8 +471,14 @@ import {
   updateStatus,
   updateTaskInfo,
   getWeekStudyTime,
+  getHealthData,
 } from "@/api/api.js";
 import { ArrowDown } from "@element-plus/icons-vue";
+let targets = reactive({
+  totalFoot: 0,
+  totalSleepTime: 0,
+});
+import { calculateHealthPoint } from "@/utils/healthyMethods.js";
 // 全屏动画加载
 const isLoading = ref(true);
 // 当前页数
@@ -724,8 +728,13 @@ const saveTask = () => {
       });
     });
 };
-const store = userStore();
-const { healthy } = store;
+//当天的健康数据
+const healthy = ref({
+  point: 0, // 指数
+  stepCount: 0, // 步数
+  sleepTime: 0, // 睡眠时长
+  heartRate: 0, // 心率
+});
 // 健康状态
 const healthyState = ref("");
 // 任务类型选择
@@ -798,7 +807,6 @@ watch(filterStatus, (newValue) => {
   }
 });
 const loadAllData = async () => {
-  healthyState.value = getHealthyState(healthy.point);
   getTasksInfo()
     .then((res) => {
       if (res.data.data) {
@@ -817,13 +825,32 @@ const loadAllData = async () => {
     });
   getWeekStudyTime()
     .then((res) => {
-      console.log(res.data.data);
-      todayStudyTime.value = parseFloat(
-        (res.data.data[0].totalDuration / 60).toFixed(1)
-      );
-      yesterDatyStudyTime.value = parseFloat(
-        (res.data.data[1].totalDuration / 60).toFixed(1)
-      );
+      if (res.data.data.length !== 0) {
+        todayStudyTime.value = parseFloat(
+          (res.data.data[0].totalDuration / 60).toFixed(1)
+        );
+        yesterDatyStudyTime.value = parseFloat(
+          (res.data.data[1].totalDuration / 60).toFixed(1)
+        );
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+
+  //获取今日的健康数据
+  getHealthData()
+    .then((res) => {
+      if (res.data.data == null) {
+        ElMessage.error(res.data.message);
+        return;
+      }
+      //初始化用户今日健康数据
+      healthy.value.heartRate = Math.round(res.data.data[0].heartRate);
+      healthy.value.stepCount = Math.round(res.data.data[0].stepCount);
+      healthy.value.sleepTime = Math.round(res.data.data[0].sleepTime);
+      //计算健康指数
+      calculateHealthPoint(healthy, healthyState);
     })
     .catch((err) => {
       console.log(err);
@@ -831,13 +858,18 @@ const loadAllData = async () => {
 };
 // 初始化加载
 onBeforeMount(async () => {
+  if(localStorage.getItem("isLoading")){
+    isLoading.value = localStorage.getItem("isLoading") === 'false' ? false : true
+  }
+  targets = JSON.parse(localStorage.getItem("targets"));
   try {
-    // 同时等待：1.所有数据加载 2.至少2秒时长
-    await Promise.all([loadAllData()]);
+    // 同时等待：1.所有数据加载 2.至少1秒时长
+    await Promise.all([loadAllData(),setTimeout(()=>{
+      isLoading.value = false;
+    },1000)]);
   } catch (error) {
     ElMessage.error(`数据加载失败: ${error.message}`);
   } finally {
-    isLoading.value = false;
     localStorage.setItem("isLoading", "false");
   }
 });
@@ -871,5 +903,42 @@ onBeforeMount(async () => {
 
 :deep(.el-input__suffix) {
   color: #6b7280;
+}
+.fullscreen-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #409eff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  margin-top: 16px;
+  color: #606266;
+  font-size: 14px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

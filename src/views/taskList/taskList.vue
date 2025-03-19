@@ -93,11 +93,14 @@
               </el-button>
             </div>
 
+
             <div class="space-y-4">
               <div>
                 <el-radio-group v-model="taskType" class="mb-4">
                   <el-radio-button value="small">小任务</el-radio-button>
-                  <el-radio-button value="big">大任务</el-radio-button>
+                  <el-radio-button value="big"
+                    >大任务</el-radio-button
+                  >
                 </el-radio-group>
               </div>
 
@@ -265,6 +268,7 @@
               >
                 创建任务
               </el-button>
+              <div style="margin-bottom: 10px;font-size:small;color:#22c55e">注：大任务由AI智能分解</div>
             </div>
           </div>
         </div>
@@ -288,9 +292,6 @@ import {
   computed,
 } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import userStore from "@/store/user.js";
-import { getHealthyState } from "@/utils/healthy.js";
-import { formatDate } from "@/utils/formDate.js";
 import {
   getTasksInfo,
   addTask,
@@ -299,7 +300,10 @@ import {
   addBigTask1,
   deleteTask,
   getWeekStudyTime,
+  getHealthData,
 } from "@/api/api.js";
+import { format } from "date-fns";
+import { calculateHealthPoint } from "@/utils/healthyMethods.js";
 // 分页相关状态
 const currentPage = ref(1);
 const pageSize = ref(5);
@@ -372,9 +376,13 @@ const formatTime = (row, column, cellValue) => {
   return `${hours}:${minutes}`; // 返回 HH:mm 格式
 };
 const centerDialogVisible = ref(false);
-const store = userStore();
-
-const { healthy } = store;
+//当天的健康数据
+const healthy = ref({
+  point: 0, // 指数
+  stepCount: 0, // 步数
+  sleepTime: 0, // 睡眠时长
+  heartRate: 0, // 心率
+});
 let healthyState = ref("");
 const taskList = ref([]);
 const addSubTask = () => {
@@ -468,6 +476,9 @@ const toggleCheck = (row) => {
   });
 };
 const isLoading = ref(false);
+const formatDate = (date) => {
+  return format(date, "hh:mm");
+};
 // 创建任务
 const createTask = () => {
   if (!newTask.value.description) {
@@ -621,16 +632,18 @@ const commitTask = () => {
   });
   centerDialogVisible.value = false;
 };
+
 onBeforeMount(() => {
-  healthyState.value = getHealthyState(healthy.point);
   getWeekStudyTime()
     .then((res) => {
-      todayStudyTime.value = parseFloat(
-        (res.data.data[0].totalDuration / 60).toFixed(1)
-      );
-      yesterDatyStudyTime.value = parseFloat(
-        (res.data.data[1].totalDuration / 60).toFixed(1)
-      );
+      if (res.data.data.length !== 0) {
+        todayStudyTime.value = parseFloat(
+          (res.data.data[0].totalDuration / 60).toFixed(1)
+        );
+        yesterDatyStudyTime.value = parseFloat(
+          (res.data.data[1].totalDuration / 60).toFixed(1)
+        );
+      }
     })
     .catch((err) => {
       console.log(err);
@@ -647,6 +660,24 @@ onBeforeMount(() => {
       });
     }
   });
+
+  //获取今日的健康数据
+  getHealthData()
+    .then((res) => {
+      if (res.data.data == null) {
+        ElMessage.error(res.data.message);
+        return;
+      }
+      //初始化用户今日健康数据
+      healthy.value.heartRate = Math.round(res.data.data[0].heartRate);
+      healthy.value.stepCount = Math.round(res.data.data[0].stepCount);
+      healthy.value.sleepTime = Math.round(res.data.data[0].sleepTime);
+      //计算健康指数
+      calculateHealthPoint(healthy, healthyState);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
 </script>
 
