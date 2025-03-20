@@ -171,9 +171,7 @@
               <el-button type="primary" class="w-full !rounded-button" @click="createTask">
                 创建任务
               </el-button>
-              <div
-                style="margin-bottom: 10px; font-size: small; color: #22c55e"
-              >
+              <div style="margin-bottom: 10px; font-size: small; color: #22c55e">
                 注：大任务由AI智能分解
               </div>
             </div>
