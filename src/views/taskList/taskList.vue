@@ -9,26 +9,22 @@
           <div class="text-gray-600 mb-2">今日待办</div>
           <div class="flex items-end">
             <span class="text-4xl font-medium">{{ taskList.length }}</span>
-            <span class="text-gray-500 ml-3"
-              >已完成
-              {{ taskList.filter((task) => task.status === 1).length }}
-              项任务</span
-            >
+            <span class="text-gray-500 ml-3">已完成
+              {{taskList.filter((task) => task.status === 1).length}}
+              项任务</span>
           </div>
         </div>
         <div class="bg-white rounded-lg p-6 shadow-sm">
           <div class="text-gray-600 mb-2">学习时长</div>
           <div class="flex items-end">
             <span class="text-4xl font-medium">{{ todayStudyTime }}h</span>
-            <span class="text-green-500 ml-3"
-              >较昨日{{
-                todayStudyTime - yesterDatyStudyTime > 0 ? "增加" : "减少"
-              }}{{
+            <span class="text-green-500 ml-3">较昨日{{
+              todayStudyTime - yesterDatyStudyTime > 0 ? "增加" : "减少"
+            }}{{
                 todayStudyTime - yesterDatyStudyTime > 0
                   ? (todayStudyTime - yesterDatyStudyTime).toFixed(1)
                   : (yesterDatyStudyTime - todayStudyTime).toFixed(1)
-              }}h</span
-            >
+              }}h</span>
           </div>
         </div>
         <div class="bg-white rounded-lg p-6 shadow-sm">
@@ -54,12 +50,7 @@
                 </template>
               </el-table-column>
               <el-table-column prop="description" label="任务名称" />
-              <el-table-column
-                prop="startTime"
-                :formatter="formatTime"
-                label="开始时间"
-                width="180"
-              />
+              <el-table-column prop="startTime" :formatter="formatTime" label="开始时间" width="180" />
               <el-table-column prop="priority" label="优先级" width="100">
                 <template #default="{ row }">
                   <el-tag size="small">
@@ -69,9 +60,7 @@
               </el-table-column>
               <el-table-column label="操作" width="100">
                 <template #default="{ row }">
-                  <el-button type="danger" @click="deleteSTask(row)"
-                    >删除</el-button
-                  >
+                  <el-button type="danger" @click="deleteSTask(row)">删除</el-button>
                 </template>
               </el-table-column>
             </el-table>
@@ -83,12 +72,11 @@
           <div class="bg-white rounded-lg p-6 shadow-sm">
             <div class="flex items-center justify-between mb-6">
               <h2 class="text-xl font-medium">新建任务</h2>
-              <el-button
-                :type="isListening ? 'info' : 'primary'"
-                class="flex items-center !rounded-button"
-                @click="toggleRecording"
-              >
-                <el-icon class="mr-1"><Microphone /></el-icon>
+              <el-button :type="isListening ? 'info' : 'primary'" class="flex items-center !rounded-button"
+                @click="toggleRecording">
+                <el-icon class="mr-1">
+                  <Microphone />
+                </el-icon>
                 {{ isListening ? "停止录音" : "语音输入" }}
               </el-button>
             </div>
@@ -101,33 +89,15 @@
                 </el-radio-group>
               </div>
 
-              <el-input
-                v-model="newTask.description"
-                placeholder="输入任务名称"
-              />
+              <el-input v-model="newTask.description" placeholder="输入任务名称" />
 
-              <el-date-picker
-                v-if="taskType == 'small'"
-                v-model="newTask.startTime"
-                type="datetime"
-                placeholder="选择开始时间"
-                style="width: 100%"
-              />
+              <el-date-picker v-if="taskType == 'small'" v-model="newTask.startTime" type="datetime"
+                placeholder="选择开始时间" style="width: 100%" />
 
-              <el-date-picker
-                v-if="taskType == 'small'"
-                v-model="newTask.endTime"
-                type="datetime"
-                placeholder="选择截止时间"
-                style="width: 100%"
-              />
+              <el-date-picker v-if="taskType == 'small'" v-model="newTask.endTime" type="datetime" placeholder="选择截止时间"
+                style="width: 100%" />
 
-              <el-select
-                v-if="taskType == 'small'"
-                v-model="newTask.priority"
-                placeholder="选择优先级"
-                style="width: 100%"
-              >
+              <el-select v-if="taskType == 'small'" v-model="newTask.priority" placeholder="选择优先级" style="width: 100%">
                 <el-option label="1" value="1" />
                 <el-option label="2" value="2" />
                 <el-option label="3" value="3" />
@@ -136,28 +106,15 @@
               </el-select>
               <div v-if="taskType == 'small'">
                 <div class="mb-2">任务标签</div>
-                <el-select
-                  v-model="newTask.tags"
-                  multiple
-                  filterable
-                  allow-create
-                  placeholder="请添加标签"
-                />
+                <el-select v-model="newTask.tags" multiple filterable allow-create placeholder="请添加标签" />
               </div>
 
               <el-dialog v-model="centerDialogVisible" width="700" align-center>
                 <div class="border rounded p-4">
                   <!-- 标题和添加按钮 -->
                   <div class="flex items-center justify-between mb-4">
-                    <span class="font-medium"
-                      >子任务列表（共{{ totalSubTasks }}项）</span
-                    >
-                    <el-button
-                      type="primary"
-                      size="small"
-                      class="!rounded-button"
-                      @click="addSubTask"
-                    >
+                    <span class="font-medium">子任务列表（共{{ totalSubTasks }}项）</span>
+                    <el-button type="primary" size="small" class="!rounded-button" @click="addSubTask">
                       添加子任务
                     </el-button>
                   </div>
@@ -165,79 +122,36 @@
                   <!-- 分页内容 -->
                   <template v-if="paginatedSubTasks.length > 0">
                     <!-- 子任务列表 -->
-                    <div
-                      v-for="(subTask, index) in paginatedSubTasks"
-                      :key="currentPage * pageSize + index"
-                      class="mb-4 space-y-2"
-                    >
+                    <div v-for="(subTask, index) in paginatedSubTasks" :key="currentPage * pageSize + index"
+                      class="mb-4 space-y-2">
                       <div class="flex gap-2 items-center">
-                        <el-input
-                          v-model="subTask.description"
-                          placeholder="任务名称"
-                          class="flex-1"
-                        />
-                        <el-select
-                          v-model="subTask.priority"
-                          placeholder="优先级"
-                          class="w-28"
-                        >
+                        <el-input v-model="subTask.description" placeholder="任务名称" class="flex-1" />
+                        <el-select v-model="subTask.priority" placeholder="优先级" class="w-28">
                           <el-option label="1" value="1" />
                           <el-option label="2" value="2" />
                           <el-option label="3" value="3" />
                           <el-option label="4" value="4" />
                           <el-option label="5" value="5" />
                         </el-select>
-                        <el-button
-                          type="danger"
-                          size="small"
-                          class="!rounded-button"
-                          @click="removeSubTask(index)"
-                          >删除</el-button
-                        >
+                        <el-button type="danger" size="small" class="!rounded-button"
+                          @click="removeSubTask(index)">删除</el-button>
                       </div>
 
                       <div class="flex gap-2">
-                        <el-date-picker
-                          v-model="subTask.startTime"
-                          type="datetime"
-                          placeholder="开始时间"
-                          class="flex-1"
-                        />
-                        <el-date-picker
-                          v-model="subTask.endTime"
-                          type="datetime"
-                          placeholder="截止时间"
-                          class="flex-1"
-                        />
+                        <el-date-picker v-model="subTask.startTime" type="datetime" placeholder="开始时间" class="flex-1" />
+                        <el-date-picker v-model="subTask.endTime" type="datetime" placeholder="截止时间" class="flex-1" />
                       </div>
 
                       <div class="flex gap-2">
-                        <el-select
-                          v-model="subTask.tags"
-                          multiple
-                          placeholder="选择标签"
-                          class="flex-1"
-                        >
-                          <el-option
-                            v-for="tag in tagOptions"
-                            :key="tag"
-                            :label="tag"
-                            :value="tag"
-                          />
+                        <el-select v-model="subTask.tags" multiple placeholder="选择标签" class="flex-1">
+                          <el-option v-for="tag in tagOptions" :key="tag" :label="tag" :value="tag" />
                         </el-select>
                       </div>
                     </div>
 
                     <!-- 分页控件 -->
-                    <el-pagination
-                      small
-                      layout="prev, pager, next"
-                      :current-page="currentPage"
-                      :page-size="pageSize"
-                      :total="totalSubTasks"
-                      @current-change="handlePageChange"
-                      class="mt-4 justify-center"
-                    />
+                    <el-pagination small layout="prev, pager, next" :current-page="currentPage" :page-size="pageSize"
+                      :total="totalSubTasks" @current-change="handlePageChange" class="mt-4 justify-center" />
                   </template>
 
                   <!-- 无数据提示 -->
@@ -248,21 +162,13 @@
 
                 <template #footer>
                   <div class="dialog-footer">
-                    <el-button @click="centerDialogVisible = false"
-                      >取消</el-button
-                    >
-                    <el-button type="primary" @click="commitTask()"
-                      >确认</el-button
-                    >
+                    <el-button @click="centerDialogVisible = false">取消</el-button>
+                    <el-button type="primary" @click="commitTask()">确认</el-button>
                   </div>
                 </template>
               </el-dialog>
 
-              <el-button
-                type="primary"
-                class="w-full !rounded-button"
-                @click="createTask"
-              >
+              <el-button type="primary" class="w-full !rounded-button" @click="createTask">
                 创建任务
               </el-button>
               <div
@@ -704,7 +610,11 @@ onBeforeMount(() => {
   getHealthData()
     .then((res) => {
       if (res.data.data == null) {
-        ElMessage.error(res.data.message);
+        //只提醒一次
+        if (localStorage.getItem("message") == null) {
+          localStorage.setItem("message", "true");
+          ElMessage.error(res.data.message);
+        }
         return;
       }
       //初始化用户今日健康数据
@@ -725,15 +635,19 @@ onBeforeMount(() => {
 :deep(.el-pagination) {
   --el-pagination-bg-color: transparent;
 }
+
 .el-input :deep(.el-input__wrapper) {
   box-shadow: 0 0 0 1px #e5e7eb;
 }
+
 .el-input :deep(.el-input__wrapper.is-focus) {
   box-shadow: 0 0 0 1px #409eff;
 }
+
 .el-date-picker {
   --el-datepicker-border-color: #e5e7eb;
 }
+
 .check-box:hover {
   cursor: pointer;
 }
@@ -771,6 +685,7 @@ onBeforeMount(() => {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }

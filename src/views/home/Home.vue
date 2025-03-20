@@ -17,7 +17,9 @@
             }}</span>
           </div>
           <div class="flex items-center text-gray-600">
-            <el-icon class="mr-2"><Check /></el-icon>
+            <el-icon class="mr-2">
+              <Check />
+            </el-icon>
             <span
               >已完成
               {{ taskList.filter((task) => task.status === 1).length }}
@@ -63,7 +65,9 @@
             }}</span>
           </div>
           <div class="flex items-center text-gray-600">
-            <el-icon class="mr-2"><Star /></el-icon>
+            <el-icon class="mr-2">
+              <Star />
+            </el-icon>
             <span> {{ healthyState }} </span>
           </div>
         </div>
@@ -392,8 +396,7 @@
               <el-date-picker
                 v-model="row.startTime"
                 type="datetime"
-                format="YYYY-MM-DD HH:mm"
-                value-format="YYYY-MM-DD HH:mm:ss"
+                value-format="YYYY-MM-DDTHH:mm:ss"
               />
             </template>
           </el-table-column>
@@ -404,13 +407,10 @@
               <el-date-picker
                 v-model="row.endTime"
                 type="datetime"
-                format="YYYY-MM-DD HH:mm"
-                value-format="YYYY-MM-DD HH:mm:ss"
+                value-format="YYYY-MM-DDTHH:mm:ss"
               />
             </template>
           </el-table-column>
-
-          
         </el-table>
         <el-table :data="[detailTask]" style="width: 100%">
           <!-- 优先级 -->
@@ -562,7 +562,14 @@ const changeStatus = (item) => {
 // 任务详情取消
 const cancelTask = () => {
   detailVisible.value = false;
-  detailTask = {};
+  detailTask = {
+    description: "",
+    startTime: "",
+    endTime: "",
+    priority: 0,
+    tags: [],
+    status: 0,
+  };
   taskList.length = 0;
   // 重新获取任务
   getTasksInfo()
@@ -654,7 +661,14 @@ const handleTaskDelete = (row) => {
             currentTaskList.splice(index, 1);
           }
           detailVisible.value = false;
-          detailTask = {};
+          detailTask = {
+            description: "",
+            startTime: "",
+            endTime: "",
+            priority: 0,
+            tags: [],
+            status: 0,
+          };
         })
         .catch((err) => {
           ElMessage({
@@ -694,8 +708,25 @@ const saveTasks = () => {
       });
     });
 };
+const formatT = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  // 获取小时、分钟和秒数，并进行补零操作
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  return formattedDate;
+};
 // 保存单个任务
 const saveTask = () => {
+  if (!(typeof detailTask.endTime === "string")) {
+    detailTask.endTime = formatT(detailTask.endTime);
+  }
+  if (!(typeof detailTask.startTime === "string")) {
+    detailTask.startTime = formatT(detailTask.startTime);
+  }
   ElMessageBox.confirm("是否保存更改?", "Warning", {
     confirmButtonText: "确认",
     cancelButtonText: "取消",
@@ -712,7 +743,14 @@ const saveTask = () => {
             message: "修改成功",
           });
           detailVisible.value = false;
-          detailTask = {};
+          detailTask = {
+            description: "",
+            startTime: "",
+            endTime: "",
+            priority: 0,
+            tags: [],
+            status: 0,
+          };
         })
         .catch((err) => {
           console.log(err);
@@ -760,7 +798,14 @@ const taskList = reactive([]);
 // 当前选择的任务
 let currentTaskList = reactive([]);
 // 当前的详情任务
-let detailTask = reactive({});
+let detailTask = reactive({
+  description: "",
+  startTime: "",
+  endTime: "",
+  priority: 0,
+  tags: [],
+  status: 0,
+});
 const value = ref(new Date());
 // 任务详情展示
 const detailVisible = ref(false);
@@ -858,7 +903,11 @@ const loadAllData = async () => {
   getHealthData()
     .then((res) => {
       if (res.data.data == null) {
-        ElMessage.error(res.data.message);
+        //只提醒一次
+        if (localStorage.getItem("message") == null) {
+          localStorage.setItem("message", "true");
+          ElMessage.error(res.data.message);
+        }
         return;
       }
       //初始化用户今日健康数据
@@ -926,6 +975,7 @@ onBeforeMount(async () => {
 :deep(.el-input__suffix) {
   color: #6b7280;
 }
+
 .fullscreen-loading {
   position: fixed;
   top: 0;
@@ -959,6 +1009,7 @@ onBeforeMount(async () => {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
