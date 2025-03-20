@@ -20,31 +20,40 @@
             <el-icon class="mr-2">
               <Check />
             </el-icon>
-            <span>已完成
-              {{taskList.filter((task) => task.status === 1).length}}
-              项任务</span>
+            <span
+              >已完成
+              {{ taskList.filter((task) => task.status === 1).length }}
+              项任务</span
+            >
           </div>
         </div>
 
         <div class="bg-white rounded-lg p-6 shadow-sm">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-medium">学习时长</h3>
-            <span class="text-3xl font-semibold text-green-500">{{ todayStudyTime }}h</span>
+            <span class="text-3xl font-semibold text-green-500"
+              >{{ todayStudyTime }}h</span
+            >
           </div>
           <div class="flex items-center text-gray-600">
-            <el-icon v-if="todayStudyTime - yesterDatyStudyTime > 0" class="mr-2">
+            <el-icon
+              v-if="todayStudyTime - yesterDatyStudyTime > 0"
+              class="mr-2"
+            >
               <ArrowUp />
             </el-icon>
             <el-icon v-else class="mr-2">
               <ArrowDown />
             </el-icon>
-            <span>较昨日{{
-              todayStudyTime - yesterDatyStudyTime > 0 ? "增加" : "减少"
-            }}{{
+            <span
+              >较昨日{{
+                todayStudyTime - yesterDatyStudyTime > 0 ? "增加" : "减少"
+              }}{{
                 todayStudyTime - yesterDatyStudyTime > 0
                   ? (todayStudyTime - yesterDatyStudyTime).toFixed(1)
                   : (yesterDatyStudyTime - todayStudyTime).toFixed(1)
-              }}h</span>
+              }}h</span
+            >
           </div>
         </div>
 
@@ -71,51 +80,83 @@
           <div class="bg-white rounded-lg p-6 shadow-sm">
             <h3 class="text-lg font-medium mb-6">今日日程</h3>
             <div class="flex space-x-4 mb-6">
-              <el-button :class="{
-                '!bg-blue-500 text-white': filterStatus === 'all',
-                '!bg-gray-200 text-gray-600': filterStatus !== 'all',
-              }" @click="filterStatus = 'all'" class="!rounded-button">
+              <el-button
+                :class="{
+                  '!bg-blue-500 text-white': filterStatus === 'all',
+                  '!bg-gray-200 text-gray-600': filterStatus !== 'all',
+                }"
+                @click="filterStatus = 'all'"
+                class="!rounded-button"
+              >
                 全部
               </el-button>
-              <el-button :class="{
-                '!bg-blue-500 text-white': filterStatus === 'completed',
-                '!bg-gray-200 text-gray-600': filterStatus !== 'completed',
-              }" @click="filterStatus = 'completed'" class="!rounded-button">
+              <el-button
+                :class="{
+                  '!bg-blue-500 text-white': filterStatus === 'completed',
+                  '!bg-gray-200 text-gray-600': filterStatus !== 'completed',
+                }"
+                @click="filterStatus = 'completed'"
+                class="!rounded-button"
+              >
                 已完成
               </el-button>
-              <el-button :class="{
-                '!bg-blue-500 text-white': filterStatus === 'pending',
-                '!bg-gray-200 text-gray-600': filterStatus !== 'pending',
-              }" @click="filterStatus = 'pending'" class="!rounded-button">
+              <el-button
+                :class="{
+                  '!bg-blue-500 text-white': filterStatus === 'pending',
+                  '!bg-gray-200 text-gray-600': filterStatus !== 'pending',
+                }"
+                @click="filterStatus = 'pending'"
+                class="!rounded-button"
+              >
                 未完成
               </el-button>
             </div>
             <div class="space-y-4">
-              <div class="flex items-start p-4 bg-blue-50 rounded-lg" v-for="(item, index) in currentTaskList"
-                :key="index">
+              <div
+                class="flex items-start p-4 bg-blue-50 rounded-lg"
+                v-for="(item, index) in currentTaskList"
+                :key="index"
+              >
                 <div class="w-20">
-                  <div style="text-align: center; line-height: 50px" class="text-lg font-medium">
+                  <div
+                    style="text-align: center; line-height: 50px"
+                    class="text-lg font-medium"
+                  >
                     {{ item.startTime.split("T")[1].split(":")[0] }}:{{
                       item.startTime.split("T")[1].split(":")[1]
                     }}
                   </div>
                 </div>
                 <div class="flex-1 ml-4">
-                  <div style="text-align: center; line-height: 50px" class="font-medium">
+                  <div
+                    style="text-align: center; line-height: 50px"
+                    class="font-medium"
+                  >
                     {{ item.description }}
                   </div>
                 </div>
                 <div style="text-align: center; line-height: 50px">
-                  <el-button :type="item.status === 1 ? 'success' : 'danger'" class="!rounded-button"
-                    @click="changeStatus(item)">{{ item.status !== 1 ? "未完成" : "已完成" }}</el-button>
+                  <el-button
+                    :type="item.status === 1 ? 'success' : 'danger'"
+                    class="!rounded-button"
+                    @click="changeStatus(item)"
+                    >{{ item.status !== 1 ? "未完成" : "已完成" }}</el-button
+                  >
                 </div>
-                <div style="
+                <div
+                  style="
                     text-align: center;
                     line-height: 50px;
                     margin-left: 20px;
-                  ">
+                  "
+                >
                   <!-- 查看详情按钮 -->
-                  <el-button type="primary" class="!rounded-button" @click="showDetailDialog(item)">查看详情</el-button>
+                  <el-button
+                    type="primary"
+                    class="!rounded-button"
+                    @click="showDetailDialog(item)"
+                    >查看详情</el-button
+                  >
                 </div>
               </div>
             </div>
@@ -126,7 +167,11 @@
             <div class="flex justify-between items-center mb-6">
               <h3 class="text-lg font-medium">日历</h3>
             </div>
-            <el-calendar ref="calendar" v-model="value" @input="handleCellClick">
+            <el-calendar
+              ref="calendar"
+              v-model="value"
+              @input="handleCellClick"
+            >
               <template #header>
                 <span>{{ formatDate(value) }}</span>
                 <el-button-group>
@@ -136,7 +181,9 @@
                   <el-button size="small" @click="selectDate('prev-month')">
                     上个月
                   </el-button>
-                  <el-button size="small" @click="selectDate('today')">今天</el-button>
+                  <el-button size="small" @click="selectDate('today')"
+                    >今天</el-button
+                  >
                   <el-button size="small" @click="selectDate('next-month')">
                     下个月
                   </el-button>
@@ -161,10 +208,19 @@
                   <span class="font-medium">{{ healthy.stepCount }} 步</span>
                 </div>
                 <!-- 总2万步 -->
-                <el-progress :percentage="parseFloat(
-                  ((healthy.stepCount * 100) / targets.totalFoot).toFixed(1)
-                )
-                  " color="#10B981" />
+                <el-progress
+                  :percentage="
+                    (healthy.stepCount * 100) / targets.totalFoot >= 100
+                      ? 100
+                      : parseFloat(
+                          (
+                            (healthy.stepCount * 100) /
+                            targets.totalFoot
+                          ).toFixed(1)
+                        )
+                  "
+                  color="#10B981"
+                />
               </div>
 
               <div>
@@ -173,13 +229,19 @@
                   <span class="font-medium">{{ healthy.sleepTime }} 小时</span>
                 </div>
                 <!-- 总8h -->
-                <el-progress :percentage="parseFloat(
-                  (
-                    (healthy.sleepTime * 100) /
-                    targets.totalSleepTime
-                  ).toFixed(1)
-                )
-                  " color="#F59E0B" />
+                <el-progress
+                  :percentage="
+                    (healthy.sleepTime * 100) / targets.totalSleepTime >= 100
+                      ? 100
+                      : parseFloat(
+                          (
+                            (healthy.sleepTime * 100) /
+                            targets.totalSleepTime
+                          ).toFixed(1)
+                        )
+                  "
+                  color="#F59E0B"
+                />
               </div>
             </div>
           </div>
@@ -188,16 +250,23 @@
           <div class="bg-white rounded-lg p-6 shadow-sm">
             <h3 class="text-lg font-medium mb-6">今日待办</h3>
             <div class="space-y-4">
-              <div v-for="(item, index) in taskList.filter(
-                (task) => task.status !== 1
-              )" :key="index" :class="index % 2
-                ? 'flex items-center justify-between p-3 bg-red-50 rounded-lg'
-                : 'flex items-center justify-between p-3 bg-orange-50 rounded-lg'
-                ">
+              <div
+                v-for="(item, index) in taskList.filter(
+                  (task) => task.status !== 1
+                )"
+                :key="index"
+                :class="
+                  index % 2
+                    ? 'flex items-center justify-between p-3 bg-red-50 rounded-lg'
+                    : 'flex items-center justify-between p-3 bg-orange-50 rounded-lg'
+                "
+              >
                 <span class="font-medium">{{ item.description }}</span>
-                <span class="text-red-500 text-sm">{{ item.startTime.split("T")[1].split(":")[0] }}:{{
-                  item.startTime.split("T")[1].split(":")[1]
-                }}</span>
+                <span class="text-red-500 text-sm"
+                  >{{ item.startTime.split("T")[1].split(":")[0] }}:{{
+                    item.startTime.split("T")[1].split(":")[1]
+                  }}</span
+                >
               </div>
             </div>
           </div>
@@ -206,7 +275,13 @@
     </div>
     <div>
       <!-- 某日的任务 -->
-      <el-dialog :show-close="false" v-model="showDialog" title="任务管理" width="80%" center>
+      <el-dialog
+        :show-close="false"
+        v-model="showDialog"
+        title="任务管理"
+        width="80%"
+        center
+      >
         <el-table :data="currentTasks" border style="width: 100%">
           <el-table-column prop="description" label="任务描述" width="200">
             <template #default="{ row }">
@@ -215,47 +290,80 @@
           </el-table-column>
           <el-table-column prop="startTime" label="开始时间" width="180">
             <template #default="{ row }">
-              <el-date-picker v-model="row.startTime" type="datetime" format="YYYY-MM-DD HH:mm"></el-date-picker>
+              <el-date-picker
+                v-model="row.startTime"
+                type="datetime"
+                format="YYYY-MM-DD HH:mm"
+              ></el-date-picker>
             </template>
           </el-table-column>
           <el-table-column prop="endTime" label="截至时间" width="180">
             <template #default="{ row }">
-              <el-date-picker v-model="row.endTime" type="datetime" format="YYYY-MM-DD HH:mm"></el-date-picker>
+              <el-date-picker
+                v-model="row.endTime"
+                type="datetime"
+                format="YYYY-MM-DD HH:mm"
+              ></el-date-picker>
             </template>
           </el-table-column>
           <!-- 优先级 -->
           <el-table-column prop="priority" label="优先级" width="120">
             <template #default="{ row }">
               <el-select v-model="row.priority">
-                <el-option v-for="item in priorityOptions" :key="item" :label="item" :value="item" />
+                <el-option
+                  v-for="item in priorityOptions"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+                />
               </el-select>
             </template>
           </el-table-column>
           <!-- 标签 -->
           <el-table-column prop="tags" label="标签">
             <template #default="{ row }">
-              <el-select v-model="row.tags" multiple filterable allow-create placeholder="请添加标签" />
+              <el-select
+                v-model="row.tags"
+                multiple
+                filterable
+                allow-create
+                placeholder="请添加标签"
+              />
             </template>
           </el-table-column>
 
           <!-- 是否完成 -->
           <el-table-column prop="status" label="状态">
             <template #default="{ row }">
-              <el-button @click="BenDichangeStatus(row)" :type="row.status === 1 ? 'success' : 'danger'">{{ row.status
-                === 1 ? "已完成" : "未完成" }}</el-button>
+              <el-button
+                @click="BenDichangeStatus(row)"
+                :type="row.status === 1 ? 'success' : 'danger'"
+                >{{ row.status === 1 ? "已完成" : "未完成" }}</el-button
+              >
             </template>
           </el-table-column>
 
           <!-- 操作列 -->
           <el-table-column label="操作" width="80">
             <template #default="{ row }">
-              <el-button type="danger" icon="Delete" circle @click="handleTasksDelete(row)" />
+              <el-button
+                type="danger"
+                icon="Delete"
+                circle
+                @click="handleTasksDelete(row)"
+              />
             </template>
           </el-table-column>
         </el-table>
-        <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage"
-          :page-sizes="[3, 5, 10]" :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper"
-          :total="tasks.length">
+        <el-pagination
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page="currentPage"
+          :page-sizes="[3, 5, 10]"
+          :page-size="pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="tasks.length"
+        >
         </el-pagination>
         <template #footer>
           <div class="dialog-footer">
@@ -266,8 +374,15 @@
       </el-dialog>
 
       <!-- 详情信息 -->
-      <el-dialog :show-close="false" v-model="detailVisible" title="任务详情" width="60%" center>
-        <el-table :data="detailTask" style="width: 100%">
+      <el-dialog
+        :show-close="false"
+        v-model="detailVisible"
+        title="任务详情"
+        width="60%"
+        center
+      >
+        <!-- 将 detailTask 对象包装成数组 -->
+        <el-table :data="[detailTask]" style="width: 100%">
           <!-- 任务描述 -->
           <el-table-column prop="description" label="任务描述" width="300">
             <template #default="{ row }">
@@ -278,22 +393,36 @@
           <!-- 开始时间 -->
           <el-table-column prop="startTime" label="开始时间">
             <template #default="{ row }">
-              <el-date-picker v-model="row.startTime" type="datetime" format="YYYY-MM-DD HH:mm" />
+              <el-date-picker
+                v-model="row.startTime"
+                type="datetime"
+                value-format="YYYY-MM-DDTHH:mm:ss"
+              />
             </template>
           </el-table-column>
+
           <!-- 截止时间 -->
           <el-table-column prop="endTime" label="截止时间">
             <template #default="{ row }">
-              <el-date-picker v-model="row.endTime" type="datetime" format="YYYY-MM-DD HH:mm" />
+              <el-date-picker
+                v-model="row.endTime"
+                type="datetime"
+                value-format="YYYY-MM-DDTHH:mm:ss"
+              />
             </template>
           </el-table-column>
         </el-table>
-        <el-table :data="detailTask" style="width: 100%">
+        <el-table :data="[detailTask]" style="width: 100%">
           <!-- 优先级 -->
           <el-table-column prop="priority" label="优先级" width="120">
             <template #default="{ row }">
               <el-select v-model="row.priority">
-                <el-option v-for="item in priorityOptions" :key="item" :label="item" :value="item" />
+                <el-option
+                  v-for="item in priorityOptions"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+                />
               </el-select>
             </template>
           </el-table-column>
@@ -301,27 +430,45 @@
           <!-- 标签 -->
           <el-table-column prop="tags" label="标签">
             <template #default="{ row }">
-              <el-select v-model="row.tags" multiple filterable allow-create placeholder="请添加标签" />
+              <el-select
+                v-model="row.tags"
+                multiple
+                filterable
+                allow-create
+                placeholder="请添加标签"
+              />
             </template>
           </el-table-column>
-          <!-- 是否完成 -->
+
+          <!-- 状态 -->
           <el-table-column prop="status" label="状态">
             <template #default="{ row }">
-              <el-button @click="BenDichangeStatus(row)" :type="row.status === 1 ? 'success' : 'danger'">{{ row.status
-                === 1 ? "已完成" : "未完成" }}</el-button>
+              <el-button
+                @click="BenDichangeStatus(row)"
+                :type="row.status === 1 ? 'success' : 'danger'"
+              >
+                {{ row.status === 1 ? "已完成" : "未完成" }}
+              </el-button>
             </template>
           </el-table-column>
+
           <!-- 操作列 -->
           <el-table-column label="操作" width="100">
             <template #default="{ row }">
-              <el-button type="danger" icon="Delete" circle @click="handleTaskDelete(row)" />
+              <el-button
+                type="danger"
+                icon="Delete"
+                circle
+                @click="handleTaskDelete(row)"
+              />
             </template>
           </el-table-column>
         </el-table>
+
         <template #footer>
           <div class="dialog-footer">
             <el-button @click="cancelTask()">取消</el-button>
-            <el-button type="primary" @click="saveTask()"> 保存 </el-button>
+            <el-button type="primary" @click="saveTask()">保存</el-button>
           </div>
         </template>
       </el-dialog>
@@ -344,8 +491,8 @@ import {
 } from "@/api/api.js";
 import { ArrowDown } from "@element-plus/icons-vue";
 let targets = reactive({
-  totalFoot: 0,
-  totalSleepTime: 0,
+  totalFoot: 1,
+  totalSleepTime: 1,
 });
 import { calculateHealthPoint } from "@/utils/healthyMethods.js";
 // 全屏动画加载
@@ -415,7 +562,14 @@ const changeStatus = (item) => {
 // 任务详情取消
 const cancelTask = () => {
   detailVisible.value = false;
-  detailTask.length = 0;
+  detailTask = {
+    description: "",
+    startTime: "",
+    endTime: "",
+    priority: 0,
+    tags: [],
+    status: 0,
+  };
   taskList.length = 0;
   // 重新获取任务
   getTasksInfo()
@@ -507,7 +661,14 @@ const handleTaskDelete = (row) => {
             currentTaskList.splice(index, 1);
           }
           detailVisible.value = false;
-          detailTask.length = 0;
+          detailTask = {
+            description: "",
+            startTime: "",
+            endTime: "",
+            priority: 0,
+            tags: [],
+            status: 0,
+          };
         })
         .catch((err) => {
           ElMessage({
@@ -547,15 +708,32 @@ const saveTasks = () => {
       });
     });
 };
+const formatT = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  // 获取小时、分钟和秒数，并进行补零操作
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  return formattedDate;
+};
 // 保存单个任务
 const saveTask = () => {
+  if (!(typeof detailTask.endTime === "string")) {
+    detailTask.endTime = formatT(detailTask.endTime);
+  }
+  if (!(typeof detailTask.startTime === "string")) {
+    detailTask.startTime = formatT(detailTask.startTime);
+  }
   ElMessageBox.confirm("是否保存更改?", "Warning", {
     confirmButtonText: "确认",
     cancelButtonText: "取消",
     type: "warning",
   })
     .then(() => {
-      updateTaskInfo(detailTask, {
+      updateTaskInfo([detailTask], {
         "Content-Type": "application/json",
       })
         .then((res) => {
@@ -565,7 +743,14 @@ const saveTask = () => {
             message: "修改成功",
           });
           detailVisible.value = false;
-          detailTask.length = 0;
+          detailTask = {
+            description: "",
+            startTime: "",
+            endTime: "",
+            priority: 0,
+            tags: [],
+            status: 0,
+          };
         })
         .catch((err) => {
           console.log(err);
@@ -613,13 +798,20 @@ const taskList = reactive([]);
 // 当前选择的任务
 let currentTaskList = reactive([]);
 // 当前的详情任务
-let detailTask = reactive([]);
+let detailTask = reactive({
+  description: "",
+  startTime: "",
+  endTime: "",
+  priority: 0,
+  tags: [],
+  status: 0,
+});
 const value = ref(new Date());
 // 任务详情展示
 const detailVisible = ref(false);
 const showDetailDialog = (task) => {
   console.log(task);
-  detailTask.push(task);
+  detailTask = JSON.parse(JSON.stringify(task));
   detailVisible.value = true;
 };
 // 处理日历单元格点击事件
@@ -741,14 +933,20 @@ const loadAllData = async () => {
 // 初始化加载
 onBeforeMount(async () => {
   if (localStorage.getItem("isLoading")) {
-    isLoading.value = localStorage.getItem("isLoading") === 'false' ? false : true
+    isLoading.value =
+      localStorage.getItem("isLoading") === "false" ? false : true;
   }
-  targets = JSON.parse(localStorage.getItem("targets"));
+  if (localStorage.getItem("targets")) {
+    targets = JSON.parse(localStorage.getItem("targets"));
+  }
   try {
     // 同时等待：1.所有数据加载 2.至少1秒时长
-    await Promise.all([loadAllData(), setTimeout(() => {
-      isLoading.value = false;
-    }, 1000)]);
+    await Promise.all([
+      loadAllData(),
+      setTimeout(() => {
+        isLoading.value = false;
+      }, 1000),
+    ]);
   } catch (error) {
     ElMessage.error(`数据加载失败: ${error.message}`);
   } finally {
