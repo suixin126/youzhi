@@ -331,7 +331,6 @@
 
 <script lang="ts" setup>
 import { ref, reactive, watch, onBeforeMount, computed } from "vue";
-import userStore from "@/store/user.js";
 import { format } from "date-fns";
 import { ElMessageBox, type CalendarInstance, ElMessage } from "element-plus";
 import {
@@ -695,13 +694,22 @@ const loadAllData = async () => {
     });
   getWeekStudyTime()
     .then((res) => {
-      if (res.data.data.length !== 0) {
-        todayStudyTime.value = parseFloat(
-          (res.data.data[0].totalDuration / 60).toFixed(1)
-        );
-        yesterDatyStudyTime.value = parseFloat(
-          (res.data.data[1].totalDuration / 60).toFixed(1)
-        );
+      if (res.data.data.length != 0) {
+        if (res.data.data[0].workDate == new Date().toISOString().split('T')[0]) {
+          todayStudyTime.value = parseFloat(
+            (res.data.data[0].totalDuration / 60).toFixed(1)
+          );
+          if (res.data.data.length > 1) {
+            yesterDatyStudyTime.value = parseFloat(
+              (res.data.data[1].totalDuration / 60).toFixed(1)
+            )
+          }
+        }
+        else {
+          yesterDatyStudyTime.value = parseFloat(
+            (res.data.data[0].totalDuration / 60).toFixed(1)
+          );
+        }
       }
     })
     .catch((err) => {

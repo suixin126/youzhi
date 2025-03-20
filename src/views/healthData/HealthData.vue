@@ -27,14 +27,14 @@
             <span class="text-3xl font-semibold text-emerald-500">{{ workTime }}h</span>
           </div>
           <div class="flex items-center text-emerald-500">
-            <el-icon v-if="workTimeDiff >= 0">
-              <ArrowUp />
-            </el-icon>
-            <el-icon v-else color="red">
+            <el-icon v-if="workTimeDiff <= 0" color="red">
               <ArrowDown />
             </el-icon>
-            <span class="ml-1 text-green-600" v-if="workTimeDiff >= 0">较昨日增加 {{ workTimeDiff }}h</span>
-            <span class="ml-1 text-red-600" v-else>较昨日减少{{ -workTimeDiff }}h</span>
+            <el-icon v-else color="green">
+              <ArrowUp />
+            </el-icon>
+            <span class="ml-1 text-red-600" v-if="workTimeDiff <= 0">较昨日减少 {{ -workTimeDiff }}h</span>
+            <span class="ml-1 text-green-600" v-else>较昨日增加{{ workTimeDiff }}h</span>
           </div>
         </div>
 
@@ -267,6 +267,7 @@ const healthy = ref({
 //工作时间
 const workTime = ref(0);
 //与最近一天工作时间的差值
+const lastWorkTime = ref(0);
 const workTimeDiff = ref(0);
 //健康建议
 const advice = ref([])
@@ -342,7 +343,6 @@ onMounted(() => {
       adviceExist.value = true;
       //如果本地仓库没有建议，获取健康建议
       getHealthSuggestion().then((res) => {
-        console.log(res.data.message);
         //提取健康建议
         localStorage.setItem("advice", JSON.stringify(extractSectionsWithoutFormat(res.data.message)));
         advice.value = extractSectionsWithoutFormat(res.data.message);
@@ -365,10 +365,20 @@ onMounted(() => {
   })
   //获取工作时间
   getWeekStudyTime().then((res) => {
+    //至少存在一条数据，判断是今日的还是之前的
     if (res.data.data.length !== 0) {
-      //转换成小时
-      workTime.value = Math.round(res.data.data[0].totalDuration / 60 * 10) / 10;
-      workTimeDiff.value = Math.round((res.data.data[0].totalDuration - res.data.data[1].totalDuration) / 60 * 10) / 10;
+      //如果是今天的
+      if (res.data.data[0].workDate == new Date().toISOString().split('T')[0]) {
+        workTime.value = Math.round(res.data.data[0].totalDuration / 60 * 10) / 10;
+        //如果至少存在两天数据
+        if (res.data.data.length > 1) {
+          lastWorkTime.value = Math.round(res.data.data[1].totalDuration / 60 * 10) / 10;
+        }
+      }
+      else {
+        lastWorkTime.value = Math.round(res.data.data[0].totalDuration / 60 * 10) / 10;
+      }
+      workTimeDiff.value = workTime.value - lastWorkTime.value;
     }
   })
   // 启动健康数据切换定时器

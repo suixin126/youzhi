@@ -210,7 +210,6 @@ const exit = () => {
     .then(() => {
       logout()
         .then((res) => {
-          console.log(res);
           ElMessage.success({
             message: "退出成功",
           });
@@ -243,12 +242,10 @@ onMounted(() => {
   //获取用户信息
   getUserInfo()
     .then((res) => {
-      console.log(res);
       userInformation.value.name = res.data.data.name;
       userInformation.value.id = res.data.data.id;
       userInformation.value.telephone = res.data.data.telephone;
       userInformation.value.email = res.data.data.email;
-      console.log(userInformation);
     })
     .catch((err) => {
       console.log(err);

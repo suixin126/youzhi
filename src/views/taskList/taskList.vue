@@ -18,7 +18,7 @@
           <div class="text-gray-600 mb-2">学习时长</div>
           <div class="flex items-end">
             <span class="text-4xl font-medium">{{ todayStudyTime }}h</span>
-            <span class="text-green-500 ml-3">较昨日{{
+            <span class="text-gray-500 ml-3">较昨日{{
               todayStudyTime - yesterDatyStudyTime > 0 ? "增加" : "减少"
             }}{{
                 todayStudyTime - yesterDatyStudyTime > 0
@@ -541,12 +541,22 @@ onBeforeMount(() => {
   getWeekStudyTime()
     .then((res) => {
       if (res.data.data.length !== 0) {
-        todayStudyTime.value = parseFloat(
-          (res.data.data[0].totalDuration / 60).toFixed(1)
-        );
-        yesterDatyStudyTime.value = parseFloat(
-          (res.data.data[1].totalDuration / 60).toFixed(1)
-        );
+        if (res.data.data[0].workDate == new Date().toISOString().split('T')[0]) {
+          todayStudyTime.value = parseFloat(
+            (res.data.data[0].totalDuration / 60).toFixed(1)
+          );
+          if (res.data.data.length > 1) {
+            yesterDatyStudyTime.value = parseFloat(
+              (res.data.data[1].totalDuration / 60).toFixed(1)
+            )
+          }
+        }
+        else {
+          yesterDatyStudyTime.value = parseFloat(
+            (res.data.data[0].totalDuration / 60).toFixed(1)
+          );
+        }
+
       }
     })
     .catch((err) => {
